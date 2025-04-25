@@ -1,0 +1,330 @@
+<h3>Splunk</h3>
+<p>
+    Splunk è una delle piattaforme SIEM più diffuse, nota per la sua potente capacità di ricerca e analisi di grandi volumi di dati. Splunk utilizza il linguaggio SPL (Search Processing Language) per interrogare i dati, un linguaggio flessibile e potente che permette analisi complesse.
+</p>
+
+<h4 class="mt-4">Fondamenti di Splunk</h4>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-database me-2"></i><strong>Organizzazione dei dati in Splunk</strong>
+    </div>
+    <div class="card-body">
+        <ul>
+            <li><strong>Index:</strong> Container di dati organizzati per tipo o fonte. Es: <code>index="windows"</code>, <code>index="network"</code>, <code>index="security"</code>.</li>
+            <li><strong>Sourcetype:</strong> Formato specifico del dato, determina come Splunk interpreta un evento. Es: <code>sourcetype="WinEventLog:Security"</code>, <code>sourcetype="cisco:asa"</code>.</li>
+            <li><strong>Source:</strong> Il file o input da cui proviene il dato. Es: <code>source="/var/log/messages"</code>.</li>
+            <li><strong>Host:</strong> Il dispositivo che ha generato il dato. Es: <code>host="webserver01"</code>.</li>
+        </ul>
+        <p>Ogni evento in Splunk è associato ad un timestamp (<code>_time</code>) che permette ricerche temporali.</p>
+    </div>
+</div>
+
+<h4 class="mt-4">Anatomia di una ricerca SPL</h4>
+<p>
+    SPL utilizza pipe (<code>|</code>) per concatenare comandi in modo simile a UNIX. I dati fluiscono attraverso i vari comandi, ciascuno operando sul risultato del precedente.
+</p>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-project-diagram me-2"></i><strong>Struttura base di una query</strong>
+    </div>
+    <div class="card-body">
+        <ol>
+            <li><strong>Selezione della fonte dati e filtraggio iniziale:</strong>
+                <pre><code class="language-sql">index="security" sourcetype="WinEventLog:Security" EventCode=4625</code></pre>
+            </li>
+            <li><strong>Trasformazione dei dati con comandi pipe:</strong>
+                <pre><code class="language-sql">... | stats count by src_ip | where count > 10</code></pre>
+            </li>
+            <li><strong>Formattazione e visualizzazione dei risultati:</strong>
+                <pre><code class="language-sql">... | sort -count | table src_ip, count, user</code></pre>
+            </li>
+        </ol>
+        
+        <div class="alert note mt-3">
+            <strong>Formula completa:</strong>
+            <pre><code class="language-sql">index="security" sourcetype="WinEventLog:Security" EventCode=4625
+| stats count by src_ip, user
+| where count > 10
+| sort -count
+| table src_ip, user, count</code></pre>
+            <p>Questa query trova indirizzi IP con più di 10 tentativi di login falliti, li ordina in modo decrescente e mostra una tabella con IP, utente e conteggio.</p>
+        </div>
+    </div>
+</div>
+
+<h4 class="mt-4">Comandi Splunk essenziali per principianti</h4>
+<div class="card mb-4">
+    <div class="card-body">
+        <p>Ecco una spiegazione dettagliata dei comandi fondamentali di Splunk che ogni SOC Analyst dovrebbe conoscere:</p>
+        
+        <h5 class="mt-3"><code>table</code>: Visualizzare i risultati in formato tabellare</h5>
+        <p>Il comando <code>table</code> ti permette di specificare esattamente quali campi visualizzare e in quale ordine.</p>
+        <pre><code class="language-sql">index=security sourcetype="WinEventLog:Security" EventCode=4624
+| table _time, user, src_ip, dest_host</code></pre>
+        <p><strong>Spiegazione per principianti:</strong> Questo comando è come dire "mostrami solo queste colonne specifiche". Nell'esempio, stiamo cercando eventi di login riusciti (codice 4624) e vogliamo vedere solo l'orario, l'utente, l'IP di origine e l'host di destinazione in una tabella ordinata.</p>
+        
+        <h5 class="mt-4"><code>sort</code>: Ordinare i risultati</h5>
+        <p>Il comando <code>sort</code> ordina i risultati in base a uno o più campi.</p>
+        <pre><code class="language-sql">index=security sourcetype="WinEventLog:Security" EventCode=4625
+| stats count as failure_count by src_ip
+| sort -failure_count</code></pre>
+        <p><strong>Spiegazione per principianti:</strong> Questo comando ordina i risultati. Il segno <code>-</code> davanti al nome del campo indica un ordinamento decrescente (dal più alto al più basso). Senza il segno <code>-</code>, l'ordinamento è crescente (dal più basso al più alto). Nell'esempio, stiamo cercando tentativi di login falliti (codice 4625), contando quanti ce ne sono per ogni IP di origine, e ordinandoli dal maggior numero di fallimenti al minore.</p>
+        
+        <h5 class="mt-4"><code>rename</code>: Rinominare i campi</h5>
+        <p>Il comando <code>rename</code> permette di dare nomi più descrittivi ai campi.</p>
+        <pre><code class="language-sql">index=security sourcetype="WinEventLog:Security" EventCode=4624
+| rename src_ip as "IP di origine", user as "Nome utente"
+| table "Nome utente", "IP di origine", _time</code></pre>
+        <p><strong>Spiegazione per principianti:</strong> Questo comando cambia il nome visualizzato di un campo. È utile per rendere i report più comprensibili, specialmente quando li condividi con colleghi che potrebbero non conoscere i nomi tecnici dei campi.</p>
+        
+        <h5 class="mt-4"><code>stats</code>: Calcolare statistiche sui dati</h5>
+        <p>Il comando <code>stats</code> è uno dei più potenti in Splunk, permettendo di calcolare vari tipi di statistiche.</p>
+        <pre><code class="language-sql">index=network sourcetype="firewall"
+| stats count as total_connections, 
+    avg(bytes) as avg_bytes, 
+    max(bytes) as max_bytes 
+    by src_ip, dest_ip, dest_port
+| sort -total_connections</code></pre>
+        <p><strong>Spiegazione per principianti:</strong> Questo comando ti permette di calcolare valori come conteggi, medie, minimi, massimi, ecc. La parte <code>by</code> indica come raggruppare questi calcoli. Nell'esempio, stiamo analizzando log di firewall, contando le connessioni totali, la media e il massimo dei byte trasmessi, raggruppando per IP di origine, IP di destinazione e porta di destinazione.</p>
+        
+        <h5 class="mt-4"><code>timechart</code>: Visualizzare trend temporali</h5>
+        <p>Il comando <code>timechart</code> è essenziale per visualizzare come i dati cambiano nel tempo.</p>
+        <pre><code class="language-sql">index=security sourcetype="WinEventLog:Security" (EventCode=4624 OR EventCode=4625)
+| timechart span=1h count by EventCode</code></pre>
+        <p><strong>Spiegazione per principianti:</strong> Questo comando crea un grafico che mostra l'andamento nel tempo. Il parametro <code>span</code> definisce l'intervallo temporale (in questo caso 1 ora). Nell'esempio, stiamo visualizzando quanti login riusciti (4624) e falliti (4625) ci sono stati per ogni ora, permettendoci di vedere facilmente anomalie nel pattern temporale.</p>
+    </div>
+</div>
+
+<h4 class="mt-4">Operatori di ricerca fondamentali</h4>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-filter me-2"></i><strong>Operatori di base</strong>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Operatore</th>
+                    <th>Esempio</th>
+                    <th>Descrizione</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>=</code></td>
+                    <td><code>user="admin"</code></td>
+                    <td>Uguaglianza esatta</td>
+                </tr>
+                <tr>
+                    <td><code>!=</code></td>
+                    <td><code>status!=200</code></td>
+                    <td>Diverso da</td>
+                </tr>
+                <tr>
+                    <td><code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code></td>
+                    <td><code>bytes_out>10000</code></td>
+                    <td>Confronti numerici</td>
+                </tr>
+                <tr>
+                    <td><code>IN</code></td>
+                    <td><code>protocol IN ("tcp", "udp")</code></td>
+                    <td>Appartiene a un insieme</td>
+                </tr>
+                <tr>
+                    <td><code>NOT</code></td>
+                    <td><code>NOT (user="guest")</code></td>
+                    <td>Negazione</td>
+                </tr>
+                <tr>
+                    <td><code>AND</code>, <code>OR</code></td>
+                    <td><code>action="login" AND status="failed"</code></td>
+                    <td>Operatori logici</td>
+                </tr>
+                <tr>
+                    <td><code>*</code>, <code>?</code></td>
+                    <td><code>user=admin*</code></td>
+                    <td>Wildcard (* = qualsiasi carattere, ? = singolo carattere)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<h4 class="mt-4">Comandi SPL essenziali</h4>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-terminal me-2"></i><strong>stats</strong>
+    </div>
+    <div class="card-body">
+        <p>Il comando <code>stats</code> è fondamentale per aggregare e calcolare statistiche sui dati. È il modo principale per passare da dati dettagliati a informazioni sintetiche e rilevanti.</p>
+        
+        <h5 class="mt-3">Sintassi di base:</h5>
+        <pre><code class="language-sql">... | stats <funzione_statistica>(<campo_opzionale>) [AS nome_campo_risultato] BY <campo1>, <campo2>, ...</code></pre>
+        
+        <p>Spiegazione passo per passo:</p>
+        <ol>
+            <li><strong>funzione_statistica</strong>: Determina quale calcolo eseguire sui dati (vedi tabella sotto)</li>
+            <li><strong>campo_opzionale</strong>: Il campo su cui applicare la funzione (non necessario per <code>count</code>)</li> 
+            <li><strong>AS nome_campo_risultato</strong>: (Opzionale) Assegna un nome al campo risultante</li>
+            <li><strong>BY campo1, campo2, ...</strong>: Raggruppa i risultati per questi campi</li>
+        </ol>
+        
+        <div class="alert info mt-3">
+            <strong>Importante:</strong> Il comando <code>stats</code> aggrega sempre i dati. Senza una clausola <code>BY</code>, restituirà una singola riga con statistiche globali. Con la clausola <code>BY</code>, restituirà una riga per ogni combinazione unica dei valori dei campi specificati.
+        </div>
+        
+        <h5 class="mt-3">Funzioni statistiche comuni:</h5>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Funzione</th>
+                    <th>Descrizione</th>
+                    <th>Esempio</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>count</code></td>
+                    <td>Conta il numero di eventi</td>
+                    <td><code>stats count AS tentativi_login</code></td>
+                </tr>
+                <tr>
+                    <td><code>sum(campo)</code></td>
+                    <td>Calcola la somma dei valori di un campo</td>
+                    <td><code>stats sum(bytes) AS totale_bytes</code></td>
+                </tr>
+                <tr>
+                    <td><code>avg(campo)</code></td>
+                    <td>Calcola la media dei valori di un campo</td>
+                    <td><code>stats avg(response_time) AS tempo_medio</code></td>
+                </tr>
+                <tr>
+                    <td><code>min(campo)</code></td>
+                    <td>Trova il valore minimo di un campo</td>
+                    <td><code>stats min(bytes) AS min_bytes</code></td>
+                </tr>
+                <tr>
+                    <td><code>max(campo)</code></td>
+                    <td>Trova il valore massimo di un campo</td>
+                    <td><code>stats max(bytes) AS max_bytes</code></td>
+                </tr>
+                <tr>
+                    <td><code>values(campo)</code></td>
+                    <td>Elenca tutti i valori unici di un campo</td>
+                    <td><code>stats values(user) AS utenti</code></td>
+                </tr>
+                <tr>
+                    <td><code>dc(campo)</code></td>
+                    <td>Conta i valori distinti di un campo</td>
+                    <td><code>stats dc(src_ip) AS ip_unici</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<h4 class="mt-4">Casi d'uso comuni</h4>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-user-shield me-2"></i><strong>Rilevamento tentativi di brute force</strong>
+    </div>
+    <div class="card-body">
+        <pre><code class="language-sql">index=security sourcetype="WinEventLog:Security" EventCode=4625 
+| stats count as failure_count by src_ip, user 
+| where failure_count > 5 
+| sort -failure_count</code></pre>
+        <p>
+            Identifica tentativi di brute force rilevando indirizzi IP con un numero elevato di login falliti per lo stesso utente.
+        </p>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-user-secret me-2"></i><strong>Rilevamento anomalie comportamentali</strong>
+    </div>
+    <div class="card-body">
+        <pre><code class="language-sql">index=security sourcetype="WinEventLog:Security" EventCode=4624 
+| stats earliest(_time) as first_login, latest(_time) as last_login, 
+    values(ComputerName) as computers, count as login_count by Account_Name 
+| eval timespan=last_login - first_login 
+| eval logins_per_hour = round(login_count / (timespan/3600),2) 
+| where logins_per_hour > 10 
+| sort -logins_per_hour</code></pre>
+        <p>
+            Questo esempio calcola il tasso di login per ogni utente e identifica quelli con attività insolitamente elevata, potenziale indicatore di credenziali compromesse o attività illecite.
+        </p>
+    </div>
+</div>
+
+<h4 class="mt-4">Query avanzate</h4>
+<p>
+    Le seguenti query sono esempi avanzati di come utilizzare Splunk per rilevare diverse minacce di sicurezza.
+    Queste query possono essere personalizzate in base al proprio ambiente e alle proprie esigenze specifiche.
+</p>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Rilevamento di modifiche critiche alle policy di sistema</strong>
+    </div>
+    <div class="card-body">
+        <p>Questa query identifica modifiche alle policy di sicurezza di Windows, che potrebbero indicare tentativi di indebolire le difese del sistema.</p>
+        <pre><code class="language-sql">index=windows EventCode=4739 OR EventCode=4738 OR EventCode=4670
+| stats count by host, user, EventCode
+| eval criticality=case(
+    EventCode=4739, "High - Domain Policy Change",
+    EventCode=4738, "Medium - User Account Change",
+    EventCode=4670, "High - Permission/ACL Change")
+| table _time, host, user, EventCode, criticality</code></pre>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Individuazione di processi PowerShell sospetti</strong>
+    </div>
+    <div class="card-body">
+        <p>Ricerca comandi PowerShell che utilizzano tecniche comuni di evasione e offuscamento.</p>
+        <pre><code class="language-sql">index=windows sourcetype=WinEventLog:Security OR sourcetype=WinEventLog:Microsoft-Windows-PowerShell/Operational
+| search EventCode=4688 OR EventCode=4103 OR EventCode=4104
+| regex CommandLine="(?i)(-enc|-encodedcommand|-e|\\-w\\s+hidden|bypass|downloadstring|invoke-expression|iex\\s|invoke-webrequest)"
+| stats count min(_time) as firstTime max(_time) as lastTime by host, user, CommandLine
+| sort - count</code></pre>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Creazione di servizi Windows sospetti</strong>
+    </div>
+    <div class="card-body">
+        <p>Identifica la creazione di nuovi servizi Windows, spesso utilizzata come metodo di persistenza.</p>
+        <pre><code class="language-sql">index=windows (EventCode=7045 OR (EventCode=4697 AND sourcetype=WinEventLog:Security))
+| table _time, host, source, user, service_name, service_file_name
+| rename "service_file_name" as binary_path
+| search NOT [| inputlookup service_whitelist.csv | fields binary_path]</code></pre>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Rilevamento di attacchi Pass-the-Hash</strong>
+    </div>
+    <div class="card-body">
+        <p>Identifica possibili attacchi Pass-the-Hash attraverso eventi NTLM e modelli di accesso anomali.</p>
+        <pre><code class="language-sql">index=windows (EventCode=4624 OR EventCode=4625) LogonType=9 OR LogonType=3
+| stats count values(ComputerName) AS TargetComputers values(TargetUserName) AS TargetUsers by SourceWorkstation, SourceIP, LogonType, Account_Name
+| where count > 3 AND mvcount(TargetComputers) > 1 AND mvcount(TargetUsers) < 3
+| lookup dnslookup clientip AS SourceIP OUTPUT clienthost
+| table SourceWorkstation, SourceIP, clienthost, count, TargetComputers, TargetUsers, Account_Name, LogonType</code></pre>
+    </div>
+</div>
+
+<div class="alert info mt-3">
+    <i class="fas fa-book me-2"></i> <strong>Approfondimento:</strong> Per ulteriori informazioni sulle ricerche avanzate in Splunk, consulta il <a href="https://docs.splunk.com/Documentation/Splunk/latest/SearchReference/SearchCheatsheet" target="_blank">Cheat Sheet ufficiale di Splunk</a> e il <a href="https://github.com/splunk/security_content" target="_blank">repository Splunk Security Content</a> che contiene numerose regole di rilevamento pronte all'uso.
+</div>
