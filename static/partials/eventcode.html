@@ -1,0 +1,512 @@
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="section-title">Event Code di Windows</h1>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <p>
+                    L'analisi degli Event Code di Windows è fondamentale per il monitoraggio della sicurezza e l'investigazione degli incidenti. 
+                    Questi codici numerici, registrati nei log di Windows, identificano specifici eventi di sistema e di sicurezza che possono indicare attività normali, anomale o malevole.
+                </p>
+                <p>
+                    Questa sezione presenta i codici evento più rilevanti per l'analisi di sicurezza, suddivisi per categoria e con indicazioni sulla loro importanza nell'ambito del SOC.
+                </p>
+            </div>
+        </div>
+        
+        <ul class="nav nav-tabs mb-4" id="eventCodeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="windows-tab" data-bs-toggle="tab" data-bs-target="#windows" type="button" role="tab" aria-controls="windows" aria-selected="true">
+                    <i class="fab fa-windows me-2"></i>Windows Eventi di Sicurezza
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sysmon-tab" data-bs-toggle="tab" data-bs-target="#sysmon" type="button" role="tab" aria-controls="sysmon" aria-selected="false">
+                    <i class="fas fa-eye me-2"></i>Sysmon
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="eventCodeTabContent">
+            <!-- Windows Security Events -->
+            <div class="tab-pane fade show active" id="windows" role="tabpanel" aria-labelledby="windows-tab">
+                <div class="alert info mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Nota:</strong> Gli eventi di sicurezza di Windows sono registrati nel Security Event Log e sono accessibili tramite Event Viewer. Sono cruciali per il rilevamento di attività malevole e per l'investigazione forense.
+                </div>
+                
+                <h2>Eventi di Login e Autenticazione</h2>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Event ID</th>
+                                <th>Descrizione</th>
+                                <th>Importanza SOC</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>4624</strong></td>
+                                <td>Login riuscito (account autenticato con successo)</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Utile per stabilire una linea base dei pattern di login normali. Controllare i Logon Type: 2 (interattivo), 3 (rete), 10 (RDP)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4625</strong></td>
+                                <td>Login fallito (tentativo di autenticazione respinto)</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Multipli tentativi possono indicare attacchi di brute force o password spray</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4634</strong></td>
+                                <td>Logout</td>
+                                <td><span class="badge bg-secondary">Bassa</span></td>
+                                <td>Utile per tracciare la durata delle sessioni</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4648</strong></td>
+                                <td>Login esplicito (un processo tenta di autenticarsi come altro utente)</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Può indicare lateral movement o escalation di privilegi</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4672</strong></td>
+                                <td>Assegnazione di privilegi speciali durante il login</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Indica l'accesso con privilegi amministrativi</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4776</strong></td>
+                                <td>Il Domain Controller ha tentato di validare le credenziali di un account</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Utile per monitorare l'autenticazione a livello di dominio</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4768</strong></td>
+                                <td>Ticket di autenticazione Kerberos (TGT) richiesto</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Importante per rilevare attacchi Kerberoasting e Golden Ticket</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4769</strong></td>
+                                <td>Ticket di servizio Kerberos (TGS) richiesto</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Cruciale per rilevare attacchi Pass-the-Ticket e Silver Ticket</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4771</strong></td>
+                                <td>Autenticazione Kerberos fallita</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Può indicare tentativi di indovinare password o attacchi brute force</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h2 class="mt-5">Gestione Account e Gruppi</h2>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Event ID</th>
+                                <th>Descrizione</th>
+                                <th>Importanza SOC</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>4720</strong></td>
+                                <td>Account utente creato</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Monitorare la creazione di account non autorizzati</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4722</strong></td>
+                                <td>Account utente abilitato</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Potenziale riattivazione di account dormienti</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4724</strong></td>
+                                <td>Reset della password di un account</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Possibile indicatore di account takeover</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4728</strong></td>
+                                <td>Membro aggiunto a un gruppo di sicurezza globale</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Particolare attenzione ai gruppi privilegiati</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4732</strong></td>
+                                <td>Membro aggiunto a un gruppo di sicurezza locale</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Monitorare specialmente aggiunte al gruppo Administrators</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4739</strong></td>
+                                <td>Policy di dominio modificata</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Potenziale tentativo di indebolire la sicurezza del dominio</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4740</strong></td>
+                                <td>Account utente bloccato</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Può indicare tentativi di login falliti multipli</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4756</strong></td>
+                                <td>Membro aggiunto a un gruppo di sicurezza universale</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Attenzione ai gruppi con privilegi elevati</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h2 class="mt-5">Eventi relativi alle policy di sicurezza</h2>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Event ID</th>
+                                <th>Descrizione</th>
+                                <th>Importanza SOC</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>4648</strong></td>
+                                <td>Tentativo di login con credenziali esplicite</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Utilizzato in tecniche di lateral movement</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4670</strong></td>
+                                <td>Permessi dell'oggetto policy modificati</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Possibile tentativo di indebolire la sicurezza</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4688</strong></td>
+                                <td>Processo creato</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Fornisce visibilità su quale processo è stato eseguito (richiede configurazione)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4689</strong></td>
+                                <td>Processo terminato</td>
+                                <td><span class="badge bg-secondary">Bassa</span></td>
+                                <td>Utile per tracciare la durata completa dei processi</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4697</strong></td>
+                                <td>Servizio installato</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Meccanismo comune per ottenere persistenza</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4698</strong></td>
+                                <td>Attività pianificata creata</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Meccanismo comune per ottenere persistenza e esecuzione automatica</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4699</strong></td>
+                                <td>Attività pianificata eliminata</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Possibile tentativo di cancellare tracce dopo l'esecuzione di malware</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4719</strong></td>
+                                <td>Policy di audit del sistema modificata</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Possibile tentativo di disabilitare il logging per nascondere attività</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h2 class="mt-5">Altri eventi rilevanti</h2>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Event ID</th>
+                                <th>Descrizione</th>
+                                <th>Importanza SOC</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>104</strong></td>
+                                <td>Log cancellato (Event Log)</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Spesso utilizzato dagli attaccanti per eliminare prove</td>
+                            </tr>
+                            <tr>
+                                <td><strong>1102</strong></td>
+                                <td>Log di sicurezza cancellato</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Forte indicatore di attività di cancellazione tracce</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4616</strong></td>
+                                <td>Ora di sistema modificata</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Possibile tentativo di manipolare i timestamp degli eventi</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4657</strong></td>
+                                <td>Valore del registro modificato (audit configurato)</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Importante per monitorare modifiche a chiavi di registro critiche</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4663</strong></td>
+                                <td>Tentativo di accesso a un oggetto</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Utile per monitorare accessi a file sensibili (se configurato)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4964</strong></td>
+                                <td>Gruppo speciale assegnato a un nuovo login</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Monitorare assegnazioni di gruppi privilegiati</td>
+                            </tr>
+                            <tr>
+                                <td><strong>5140</strong></td>
+                                <td>Share di rete acceduta</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Importante per rilevare accessi a condivisioni di rete sensibili</td>
+                            </tr>
+                            <tr>
+                                <td><strong>5156</strong></td>
+                                <td>Windows Filtering Platform ha permesso una connessione</td>
+                                <td><span class="badge bg-secondary">Bassa</span></td>
+                                <td>Utile per tracciare connessioni di rete (genera molti eventi)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>5157</strong></td>
+                                <td>Windows Filtering Platform ha bloccato una connessione</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Può aiutare a identificare tentativi di comunicazione bloccati</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Sysmon Events -->
+            <div class="tab-pane fade" id="sysmon" role="tabpanel" aria-labelledby="sysmon-tab">
+                <div class="alert info mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Nota:</strong> Sysmon (System Monitor) è uno strumento avanzato di monitoraggio fornito da Microsoft che registra attività dettagliate sul sistema. È particolarmente utile per il threat hunting e risposta agli incidenti. I log di Sysmon sono disponibili nell'Event Viewer sotto "Applications and Services Logs > Microsoft > Windows > Sysmon > Operational".
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Event ID</th>
+                                <th>Descrizione</th>
+                                <th>Importanza SOC</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>1</strong></td>
+                                <td>Creazione processo</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Registra dettagli completi di ogni processo creato, inclusi hash, linea di comando e processo parent</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2</strong></td>
+                                <td>Un processo ha modificato il timestamp di un file</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Può indicare tentativi di nascondere modifiche ai file</td>
+                            </tr>
+                            <tr>
+                                <td><strong>3</strong></td>
+                                <td>Connessione di rete</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Registra tutte le connessioni di rete in entrata e uscita con dettagli sul processo che le ha iniziate</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4</strong></td>
+                                <td>Sysmon stato del servizio modificato</td>
+                                <td><span class="badge bg-secondary">Bassa</span></td>
+                                <td>Indica modifiche alla configurazione di Sysmon</td>
+                            </tr>
+                            <tr>
+                                <td><strong>5</strong></td>
+                                <td>Processo terminato</td>
+                                <td><span class="badge bg-secondary">Bassa</span></td>
+                                <td>Registra quando un processo termina (meno utile rispetto alla creazione)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>6</strong></td>
+                                <td>Driver o immagine DLL caricata</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Identifica il caricamento di driver e DLL firmati o non firmati</td>
+                            </tr>
+                            <tr>
+                                <td><strong>7</strong></td>
+                                <td>Modulo caricato</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Registra quando un modulo viene caricato da un processo (potenziale DLL injection)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>8</strong></td>
+                                <td>CreateRemoteThread</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Spesso utilizzato da malware per l'iniezione di codice in altri processi</td>
+                            </tr>
+                            <tr>
+                                <td><strong>9</strong></td>
+                                <td>RawAccessRead</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Rileva tentativi di lettura diretta del disco, usati per estrarre credenziali o aggirare controlli di accesso</td>
+                            </tr>
+                            <tr>
+                                <td><strong>10</strong></td>
+                                <td>Accesso al processo</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Rileva quando un processo apre un altro processo, potenziale indicatore di credential dumping (lsass.exe)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>11</strong></td>
+                                <td>Creazione file</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Registra la creazione e sovrascrittura di file</td>
+                            </tr>
+                            <tr>
+                                <td><strong>12</strong></td>
+                                <td>Evento di creazione/modifica chiave di registro</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Cruciale per rilevare tecniche di persistenza basate sul registro</td>
+                            </tr>
+                            <tr>
+                                <td><strong>13</strong></td>
+                                <td>Evento di modifica valore chiave di registro</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Registra modifiche ai valori delle chiavi di registro monitorate</td>
+                            </tr>
+                            <tr>
+                                <td><strong>14</strong></td>
+                                <td>Evento di rinomina chiave di registro</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Rileva tentativi di rinominare chiavi di registro sensibili</td>
+                            </tr>
+                            <tr>
+                                <td><strong>15</strong></td>
+                                <td>Creazione flusso alternativo di file</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Tecnica utilizzata per nascondere dati all'interno di file esistenti (ADS)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>16</strong></td>
+                                <td>Configurazione Sysmon modificata</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Può indicare un tentativo di disabilitare o indebolire il monitoraggio</td>
+                            </tr>
+                            <tr>
+                                <td><strong>17</strong></td>
+                                <td>Pipe creata</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Monitoraggio delle pipe named, utilizzate per la comunicazione tra processi</td>
+                            </tr>
+                            <tr>
+                                <td><strong>18</strong></td>
+                                <td>Connessione pipe</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Registra connessioni alle pipe named, utilizzate per IPC e C2</td>
+                            </tr>
+                            <tr>
+                                <td><strong>19</strong></td>
+                                <td>WmiEventFilter attività rilevata</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Parte delle tecniche di persistenza basate su WMI</td>
+                            </tr>
+                            <tr>
+                                <td><strong>20</strong></td>
+                                <td>WmiEventConsumer attività rilevata</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Parte delle tecniche di persistenza basate su WMI</td>
+                            </tr>
+                            <tr>
+                                <td><strong>21</strong></td>
+                                <td>WmiEventConsumerToFilter attività rilevata</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Legame tra filter e consumer WMI, elemento chiave della persistenza</td>
+                            </tr>
+                            <tr>
+                                <td><strong>22</strong></td>
+                                <td>DNS query</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Registra query DNS, utile per rilevare C2 e data exfiltration</td>
+                            </tr>
+                            <tr>
+                                <td><strong>23</strong></td>
+                                <td>Creazione file con hash specifico</td>
+                                <td><span class="badge bg-danger">Alta</span></td>
+                                <td>Rileva la creazione di file con hash noti come malevoli</td>
+                            </tr>
+                            <tr>
+                                <td><strong>24</strong></td>
+                                <td>Clipboard modificata</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Rileva modifiche degli appunti del sistema</td>
+                            </tr>
+                            <tr>
+                                <td><strong>25</strong></td>
+                                <td>Eliminazione processo</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Rileva quando un processo viene terminato da un altro processo</td>
+                            </tr>
+                            <tr>
+                                <td><strong>26</strong></td>
+                                <td>Rilevata apertura file</td>
+                                <td><span class="badge bg-warning">Media</span></td>
+                                <td>Registra aperture di file (genera molti eventi)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="alert warning mt-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Attenzione:</strong> La configurazione predefinita di Sysmon registra eventi limitati. Per un monitoraggio efficace, è consigliabile utilizzare configurazioni specifiche come quelle di <a href="https://github.com/SwiftOnSecurity/sysmon-config" target="_blank">SwiftOnSecurity</a> o <a href="https://github.com/olafhartong/sysmon-modular" target="_blank">Olaf Hartong</a>.
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-5">
+            <div class="card-header">
+                <i class="fas fa-clipboard-list me-2"></i><strong>Best practice per il monitoraggio degli Event Code</strong>
+            </div>
+            <div class="card-body">
+                <ol>
+                    <li><strong>Non monitorare tutto:</strong> Concentrati su eventi ad alta rilevanza per la sicurezza per evitare l'alert fatigue.</li>
+                    <li><strong>Stabilisci una baseline:</strong> Comprendi i pattern normali nel tuo ambiente prima di creare regole di rilevamento.</li>
+                    <li><strong>Correlazione:</strong> Combina più eventi correlati per ridurre i falsi positivi (es. creazione account + aggiunta a gruppo amministrativo).</li>
+                    <li><strong>Arricchisci con contesto:</strong> Integra informazioni da varie fonti come Active Directory e inventario asset.</li>
+                    <li><strong>Automatizza:</strong> Sviluppa playbook di risposta per eventi comuni e automazioni per l'analisi iniziale.</li>
+                    <li><strong>Aggiorna le regole:</strong> Revisiona e aggiorna regolarmente le regole di monitoraggio in base a nuove minacce e tattiche.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>

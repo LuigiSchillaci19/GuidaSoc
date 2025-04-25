@@ -1,0 +1,377 @@
+<h3>Microsoft Defender</h3>
+<p>
+    Microsoft Defender for Endpoint (precedentemente ATP) integrato con Microsoft 365 Defender offre funzionalità avanzate di rilevamento e risposta. La funzionalità Advanced Hunting utilizza KQL (Kusto Query Language) per interrogare i dati.
+</p>
+
+<h4 class="mt-4">Uso di Advanced Hunting con KQL</h4>
+<p>
+    Advanced Hunting ti permette di cercare minacce in un dataset che copre fino a 30 giorni di dati. Le query utilizzano tabelle specifiche come DeviceProcessEvents, DeviceFileEvents, ecc.
+</p>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-terminal me-2"></i><strong>Struttura base KQL</strong>
+    </div>
+    <div class="card-body">
+        <pre><code class="language-sql">NomeTabella
+| where Colonna == "Valore"
+| project Colonna1, Colonna2
+| limit 100</code></pre>
+        <p>
+            La sintassi è simile a quella di Splunk, ma usa pipe (|) per separare le operazioni, "where" per filtrare e "project" per selezionare le colonne.
+        </p>
+    </div>
+</div>
+
+<h4 class="mt-4">Query per file sospetti</h4>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-file me-2"></i><strong>File eseguibili in cartelle insolite</strong>
+    </div>
+    <div class="card-body">
+        <pre><code class="language-sql">DeviceFileEvents
+| where Timestamp > ago(7d)
+| where FolderPath startswith "C:\\Users" 
+  and FolderPath contains "\\AppData\\Local\\Temp\\" 
+  and (FileName endswith ".exe" or FileName endswith ".dll")
+| project Timestamp, DeviceName, ActionType, FileName, FolderPath, SHA1, InitiatingProcessCommandLine
+| order by Timestamp desc</code></pre>
+        <p>
+            Identifica file eseguibili o DLL salvati nelle cartelle temporanee degli utenti negli ultimi 7 giorni.
+        </p>
+    </div>
+</div>
+
+<h4 class="mt-4">Esecuzioni anomale</h4>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-running me-2"></i><strong>Processi con linee di comando sospette</strong>
+    </div>
+    <div class="card-body">
+        <pre><code class="language-sql">DeviceProcessEvents
+| where Timestamp > ago(1d)
+| where FileName in~ ("powershell.exe", "cmd.exe", "wscript.exe", "cscript.exe")
+| where ProcessCommandLine contains "hidden" 
+   or ProcessCommandLine contains "bypass" 
+   or ProcessCommandLine contains "-enc" 
+   or ProcessCommandLine contains "-w hidden" 
+   or ProcessCommandLine contains "IEX"
+| project Timestamp, DeviceName, FileName, ProcessCommandLine, AccountName
+| order by Timestamp desc</code></pre>
+        <p>
+            Rileva comandi di PowerShell o cmd potenzialmente dannosi che utilizzano tecniche di offuscamento o bypass.
+        </p>
+    </div>
+</div>
+
+<h4 class="mt-4">PowerShell sospetto</h4>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-terminal me-2"></i><strong>Download e esecuzione remota</strong>
+    </div>
+    <div class="card-body">
+        <pre><code class="language-sql">DeviceProcessEvents
+| where Timestamp > ago(7d)
+| where FileName =~ "powershell.exe"
+| where ProcessCommandLine has_any("wget", "curl", "Invoke-WebRequest", "Net.WebClient", "Start-BitsTransfer", "DownloadFile")
+| where ProcessCommandLine has_any("IEX", "Invoke-Expression", "-e ", "-enc", "-EncodedCommand")
+| project Timestamp, DeviceName, InitiatingProcessFileName, ProcessCommandLine, AccountName
+| order by Timestamp desc</code></pre>
+        <p>
+            Questa query identifica scenari in cui PowerShell viene utilizzato per scaricare contenuto da Internet e poi eseguirlo direttamente in memoria, una tecnica comune nei malware "fileless".
+        </p>
+    </div>
+</div>
+
+<h4 class="mt-4">Esempi pratici di indagine</h4>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-search me-2"></i><strong>Tracciare la catena di esecuzione completa</strong>
+    </div>
+    <div class="card-body">
+        <pre><code class="language-sql">// Inizia da un processo sospetto identificato
+let suspiciousProcess = DeviceProcessEvents
+| where ProcessCommandLine contains "sospetto"
+| limit 1;
+// Trova il processo genitore
+let parentProcess = DeviceProcessEvents
+| where ProcessId in (suspiciousProcess | project InitiatingProcessId)
+| project ProcessId, FileName, ProcessCommandLine;
+// Trova tutti i processi figli
+let childProcesses = DeviceProcessEvents
+| where InitiatingProcessId in (suspiciousProcess | project ProcessId)
+| project ProcessId, FileName, ProcessCommandLine;
+// Unisci i risultati per visualizzare l'intera catena
+parentProcess
+| union suspiciousProcess
+| union childProcesses
+| order by Timestamp asc</code></pre>
+        <p>
+            Questo approccio permette di visualizzare l'intera catena di esecuzione, dal processo genitore ai processi figli, utile per comprendere il contesto completo di un'attività sospetta.
+        </p>
+    </div>
+</div>
+
+<div class="alert info mt-3">
+    <i class="fas fa-lightbulb me-2"></i> <strong>Consiglio:</strong> Utilizza il portale Microsoft 365 Defender per creare regole di rilevamento personalizzate basate sulle tue query di Advanced Hunting. Le regole possono essere configurate per generare automaticamente incidenti, avvisi o eseguire azioni di risposta.
+</div>
+
+<h4 class="mt-4">Query avanzate</h4>
+<p>
+    Le seguenti query sono esempi avanzati di come utilizzare Microsoft Defender Advanced Hunting per rilevare diverse minacce di sicurezza.
+    Queste query utilizzano il linguaggio KQL e si integrano con il modello dei dati di Defender.
+</p>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Creazioni di chiavi di registro per persistence</strong>
+    </div>
+    <div class="card-body">
+        <p>Identifica la creazione di chiavi di registro comunemente utilizzate per la persistenza del malware.</p>
+        <pre><code class="language-sql">DeviceRegistryEvents
+| where ActionType == "RegistryValueSet"
+| where RegistryKey matches regex @".*\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run|.*\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunOnce|.*\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunOnceEx|.*\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\StartupApproved"
+| where PreviousRegistryValueData != RegistryValueData or isempty(PreviousRegistryValueData)
+| project Timestamp, DeviceName, RegistryKey, RegistryValueName, RegistryValueData, InitiatingProcessAccountName, InitiatingProcessCommandLine
+| order by Timestamp desc</code></pre>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Download sospetti da domini di recente creazione</strong>
+    </div>
+    <div class="card-body">
+        <p>Rileva download di file eseguibili da domini creati negli ultimi 30 giorni, potenziale indicatore di campagne malware.</p>
+        <pre><code class="language-sql">let newDomains = materialize (
+    DeviceNetworkEvents
+    | where Timestamp > ago(30d)
+    | where RemoteUrl !startswith "10." and RemoteUrl !startswith "192.168." and RemoteUrl !startswith "172."
+    | extend domain = tostring(parse_url(RemoteUrl).Host)
+    | where isnotempty(domain)
+    | summarize firstSeen = min(Timestamp) by domain
+    | where firstSeen > ago(30d)
+);
+DeviceFileEvents
+| where ActionType == "FileCreated" or ActionType == "FileModified"
+| where FileName endswith ".exe" or FileName endswith ".dll" or FileName endswith ".ps1" or FileName endswith ".vbs"
+| join kind=inner newDomains on $left.RequestUrl contains $right.domain
+| project Timestamp, DeviceName, FileName, FolderPath, RequestUrl, domain, firstSeen, InitiatingProcessCommandLine
+| order by Timestamp desc</code></pre>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Command line evasion techniques</strong>
+    </div>
+    <div class="card-body">
+        <p>Cerca tecniche di evasione nella riga di comando di processi, come l'uso di parametri per nascondere finestre o bypassare restrizioni.</p>
+        <pre><code class="language-sql">DeviceProcessEvents
+| where Timestamp > ago(7d)
+| where ProcessCommandLine has_any("-w hidden", "-window hidden", "-enc", "-encodedcommand", "-nop", 
+    "-noprofile", "bypass", "-decode", "frombase64string", "downloadstring", "downloadfile")
+| extend CommandLineLower = tolower(ProcessCommandLine)
+| extend EncodedCommand = extract(@"-e[ncodedCommand]* ([A-Za-z0-9+/]{20,}={0,2})", 1, CommandLineLower)
+| extend CommandlineLength = strlen(ProcessCommandLine)
+| project Timestamp, DeviceName, ProcessCommandLine, CommandlineLength, EncodedCommand, AccountName, AccountDomain, ProcessId, ParentProcessName, InitiatingProcessCommandLine
+| sort by Timestamp desc</code></pre>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Rilevamento di attività LOLBAS (Living Off The Land Binaries And Scripts)</strong>
+    </div>
+    <div class="card-body">
+        <p>Identifica l'uso di binari legittimi di Windows per scopi potenzialmente malevoli, una tecnica che sfrutta strumenti di sistema per eludere il rilevamento.</p>
+        <pre><code class="language-sql">// Elenco parziale di binari LOLBAS comuni
+let lolBins = dynamic([
+    "certutil.exe", "bitsadmin.exe", "mshta.exe", "regsvr32.exe", "wmic.exe", 
+    "msiexec.exe", "installutil.exe", "regasm.exe", "regsvcs.exe", "msdt.exe", 
+    "dfsvc.exe", "mavinject.exe", "presentationhost.exe", "wsl.exe", "forfiles.exe", 
+    "te.exe", "bash.exe", "pcwrun.exe", "diskshadow.exe", "dnscmd.exe", "vssadmin.exe"
+]);
+
+// Modelli di command line sospetti per ciascun binario
+let suspiciousPatterns = dynamic([
+    "certutil.*-urlcache", "certutil.*-encode", "certutil.*-decode",
+    "bitsadmin.*transfer", "bitsadmin.*download",
+    "mshta.*javascript:", "mshta.*vbscript:",
+    "regsvr32.*scrobj.dll", "regsvr32.*\/s.*\/u.*\/i:",
+    "wmic.*process.*call.*create", "wmic.*shadowcopy",
+    "msiexec.*http", "msiexec.*ftp",
+    "regasm.*\/u", "regsvcs.*\/u",
+    "msdt.*\/id", "msdt.*PCWDiagnostic",
+    "mavinject.*INJECTRUNNING",
+    "presentationhost.*http", "presentationhost.*ftp",
+    "forfiles.*\/p.*\/m.*\/c",
+    "wsl.*-e"
+]);
+
+DeviceProcessEvents
+| where FileName in~ (lolBins)
+| where ProcessCommandLine matches regex (strcat('(?i)(', strcat_array(suspiciousPatterns, '|'), ')'))
+| extend TriggeringPattern = extract(@"(?i)(certutil.*-urlcache|certutil.*-encode|certutil.*-decode|bitsadmin.*transfer|bitsadmin.*download|mshta.*javascript:|mshta.*vbscript:|regsvr32.*scrobj\.dll|regsvr32.*\/s.*\/u.*\/i:|wmic.*process.*call.*create|wmic.*shadowcopy|msiexec.*http|msiexec.*ftp|regasm.*\/u|regsvcs.*\/u|msdt.*\/id|msdt.*PCWDiagnostic|mavinject.*INJECTRUNNING|presentationhost.*http|presentationhost.*ftp|forfiles.*\/p.*\/m.*\/c|wsl.*-e)", 1, ProcessCommandLine)
+| project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine, TriggeringPattern, InitiatingProcessCommandLine
+| order by Timestamp desc</code></pre>
+    </div>
+</div>
+
+<div class="alert info mt-3">
+    <i class="fas fa-book me-2"></i> <strong>Approfondimento:</strong> Per ulteriori informazioni sulle query avanzate in Microsoft Defender, consulta la <a href="https://github.com/Microsoft/Microsoft-365-Defender-Hunting-Queries" target="_blank">repository ufficiale di query di hunting</a> e il documento <a href="https://docs.microsoft.com/en-us/microsoft-365/security/defender/advanced-hunting-schema-tables" target="_blank">schema delle tabelle di Advanced Hunting</a>.
+</div>
+
+<h4 class="mt-4">Funzioni avanzate KQL in Microsoft Defender</h4>
+<p>
+    Kusto Query Language (KQL) offre potenti funzioni che consentono analisi avanzate in Microsoft Defender. Ecco una guida dettagliata alle funzioni principali che ogni analista SOC dovrebbe conoscere.
+</p>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>La funzione <code>summarize</code></strong>
+    </div>
+    <div class="card-body">
+        <p>La funzione <code>summarize</code> è fondamentale per aggregare dati e creare statistiche.</p>
+        
+        <h5 class="mt-2">Sintassi base</h5>
+        <pre><code class="language-sql">DeviceNetworkEvents
+| summarize count() by DeviceName, RemoteIP</code></pre>
+        
+        <p><strong>Spiegazione per principianti:</strong> La funzione <code>summarize</code> raggruppa i dati e calcola statistiche su questi gruppi, simile a GROUP BY in SQL. Nell'esempio, stiamo contando quante connessioni di rete ci sono state tra ciascun dispositivo e ciascun IP remoto.</p>
+        
+        <h5 class="mt-3">Aggregazioni multiple</h5>
+        <pre><code class="language-sql">DeviceNetworkEvents
+| summarize 
+    ConnectionCount = count(),
+    FirstSeen = min(Timestamp),
+    LastSeen = max(Timestamp),
+    BytesSent = sum(BytesSent),
+    BytesReceived = sum(BytesReceived)
+    by DeviceName, RemoteIP, RemotePort</code></pre>
+        
+        <p><strong>Spiegazione per principianti:</strong> Puoi calcolare più statistiche in una singola query <code>summarize</code>. Qui stiamo contando le connessioni, trovando la prima e l'ultima volta che abbiamo visto questa connessione, e sommando i byte inviati e ricevuti, tutto raggruppato per dispositivo, IP remoto e porta remota.</p>
+        
+        <h5 class="mt-3">Filtrare dopo l'aggregazione</h5>
+        <pre><code class="language-sql">DeviceNetworkEvents
+| summarize ConnectionCount = count() by DeviceName, RemoteIP
+| where ConnectionCount > 100</code></pre>
+        
+        <p><strong>Spiegazione per principianti:</strong> Dopo aver aggregato con <code>summarize</code>, puoi filtrare i risultati con <code>where</code>. In questo esempio, mostriamo solo le combinazioni dispositivo/IP con più di 100 connessioni, potenziale indicatore di attività sospetta.</p>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>La funzione <code>project</code></strong>
+    </div>
+    <div class="card-body">
+        <p>La funzione <code>project</code> seleziona, rinomina e crea colonne.</p>
+        
+        <h5 class="mt-2">Selezionare colonne specifiche</h5>
+        <pre><code class="language-sql">DeviceProcessEvents
+| project Timestamp, DeviceName, FileName, ProcessCommandLine</code></pre>
+        
+        <p><strong>Spiegazione per principianti:</strong> Il comando <code>project</code> ti permette di scegliere esattamente quali colonne vuoi vedere nei risultati. È simile al comando SELECT in SQL. Qui stiamo selezionando solo l'orario, il nome del dispositivo, il nome del file e la riga di comando del processo.</p>
+        
+        <h5 class="mt-3">Rinominare colonne</h5>
+        <pre><code class="language-sql">DeviceProcessEvents
+| project 
+    EventTime = Timestamp, 
+    Computer = DeviceName, 
+    ExecutableName = FileName, 
+    CommandLine = ProcessCommandLine</code></pre>
+        
+        <p><strong>Spiegazione per principianti:</strong> Puoi anche rinominare le colonne mentre le selezioni. Questo è utile per rendere i nomi più descrittivi o coerenti con la tua terminologia.</p>
+        
+        <h5 class="mt-3">Creare nuove colonne</h5>
+        <pre><code class="language-sql">DeviceNetworkEvents
+| project 
+    Timestamp, 
+    DeviceName, 
+    ConnectionString = strcat(RemoteIP, ":", tostring(RemotePort)),
+    BytesTotal = BytesSent + BytesReceived</code></pre>
+        
+        <p><strong>Spiegazione per principianti:</strong> Con <code>project</code> puoi anche creare nuove colonne calcolate. Qui stiamo creando una colonna che combina IP e porta in un'unica stringa, e un'altra che somma i byte inviati e ricevuti.</p>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Funzioni temporali e analisi trend</strong>
+    </div>
+    <div class="card-body">
+        <p>KQL offre potenti funzionalità per l'analisi temporale, essenziale per rilevare anomalie.</p>
+        
+        <h5 class="mt-2">Intervalli temporali con <code>ago()</code></h5>
+        <pre><code class="language-sql">DeviceProcessEvents
+| where Timestamp > ago(1h)
+| summarize ProcessCount = count() by DeviceName, FileName</code></pre>
+        
+        <p><strong>Spiegazione per principianti:</strong> La funzione <code>ago()</code> calcola un timestamp relativo al momento attuale. Qui stiamo filtrando per vedere solo gli eventi dell'ultima ora. Puoi usare unità come m (minuti), h (ore), d (giorni).</p>
+        
+        <h5 class="mt-3">Trend temporali con <code>bin()</code></h5>
+        <pre><code class="language-sql">DeviceNetworkEvents
+| where Timestamp > ago(24h)
+| summarize ConnectionCount = count() by 
+    DeviceName, 
+    RemoteIP, 
+    TimeWindow = bin(Timestamp, 1h)
+| order by TimeWindow asc</code></pre>
+        
+        <p><strong>Spiegazione per principianti:</strong> La funzione <code>bin()</code> raggruppa i valori temporali in intervalli regolari. Qui stiamo contando le connessioni per ogni combinazione dispositivo/IP in intervalli di 1 ora. Questo è utilissimo per visualizzare trend e identificare picchi anomali di attività.</p>
+        
+        <h5 class="mt-3">Calcolo di durate con <code>datetime_diff()</code></h5>
+        <pre><code class="language-sql">DeviceLogonEvents
+| where ActionType == "LogonSuccess"
+| project 
+    DeviceName, 
+    AccountName, 
+    LogonTime = Timestamp
+| join kind=inner (
+    DeviceLogonEvents
+    | where ActionType == "LogOffSuccess"
+    | project 
+        DeviceName, 
+        AccountName, 
+        LogoffTime = Timestamp
+) on DeviceName, AccountName
+| where LogoffTime > LogonTime
+| extend SessionDurationMinutes = datetime_diff('minute', LogoffTime, LogonTime)
+| where SessionDurationMinutes < 2
+| project DeviceName, AccountName, LogonTime, LogoffTime, SessionDurationMinutes</code></pre>
+        
+        <p><strong>Spiegazione per principianti:</strong> La funzione <code>datetime_diff()</code> calcola la differenza tra due timestamp. Qui stiamo trovando sessioni utente molto brevi (meno di 2 minuti), che potrebbero indicare attività sospette come login automatizzati o attacchi "touch and go".</p>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Funzioni di stringa e pattern matching</strong>
+    </div>
+    <div class="card-body">
+        <p>L'analisi delle stringhe è cruciale per identificare attività malevole, specialmente nei comandi e nei percorsi dei file.</p>
+        
+        <h5 class="mt-2">Ricerca con <code>contains</code>, <code>startswith</code>, <code>endswith</code></h5>
+        <pre><code class="language-sql">DeviceProcessEvents
+| where 
+    ProcessCommandLine contains "mimikatz" or
+    ProcessCommandLine contains "sekurlsa" or
+    ProcessCommandLine contains "kerberos" and ProcessCommandLine contains "dump"</code></pre>
+        
+        <p><strong>Spiegazione per principianti:</strong> Queste funzioni consentono di cercare sottostringhe all'interno dei campi. Qui stiamo cercando comandi che potrebbero indicare l'uso di Mimikatz, un tool comunemente usato per il furto di credenziali.</p>
+        
+        <h5 class="mt-3">Estrazione di parti di stringhe con <code>extract()</code></h5>
+        <pre><code class="language-sql">DeviceFileEvents
+| where FileName endswith ".exe"
+| where FileOriginUrl startswith "http"
+| extend Domain = extract("https?://([^/]+)", 1, FileOriginUrl)
+| summarize DownloadCount = count() by Domain, FileName</code></pre>
+        
+        <p><strong>Spiegazione per principianti:</strong> La funzione <code>extract()</code> usa espressioni regolari per estrarre parti specifiche di una stringa. Qui stiamo estraendo il nome del dominio dagli URL da cui sono stati scaricati file eseguibili, per identificare potenziali fonti di malware.</p>
+    </div>
+</div>

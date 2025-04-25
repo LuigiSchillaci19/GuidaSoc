@@ -1,0 +1,303 @@
+:root {
+    /* Tema dark professionale */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #252525;
+    --bg-tertiary: #2d2d2d;
+    --text-primary: #f5f5f5;
+    --text-secondary: #aaaaaa;
+    --accent-primary: #3498db;
+    --accent-secondary: #2980b9;
+    --danger: #e74c3c;
+    --success: #2ecc71;
+    --warning: #f39c12;
+    --info: #3498db;
+}
+
+body {
+    font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header styling */
+header {
+    background-color: var(--bg-secondary);
+    padding: 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-primary) !important;
+}
+
+.nav-link {
+    color: var(--text-secondary) !important;
+    transition: color 0.3s ease;
+    padding: 0.5rem 0.75rem;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--accent-primary) !important;
+}
+
+.nav-tabs {
+    border-bottom: 1px solid var(--bg-tertiary);
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.nav-tabs .nav-link {
+    margin-bottom: -1px;
+    border-radius: 4px 4px 0 0;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: var(--bg-tertiary);
+    border-color: var(--bg-tertiary);
+}
+
+/* Main content */
+main {
+    flex: 1;
+    padding: 1rem;
+    min-height: calc(100vh - 150px);
+}
+
+.section-title {
+    color: var(--accent-primary);
+    border-bottom: 2px solid var(--accent-primary);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.card {
+    background-color: var(--bg-secondary);
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    margin-bottom: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+}
+
+.card-header {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.card-body {
+    padding: 1rem;
+}
+
+/* Code blocks styling */
+pre {
+    background-color: var(--bg-tertiary);
+    border-radius: 6px;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    border-left: 4px solid var(--accent-primary);
+}
+
+code {
+    color: var(--text-primary);
+    font-family: 'Fira Code', 'Consolas', monospace;
+}
+
+/* Tabelle */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+table, th, td {
+    border: 1px solid var(--bg-tertiary);
+}
+
+th {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    padding: 0.75rem;
+    text-align: left;
+}
+
+td {
+    padding: 0.75rem;
+    color: var(--text-secondary);
+}
+
+tr:nth-child(even) {
+    background-color: rgba(255,255,255,0.05);
+}
+
+/* Bottoni */
+.btn-primary {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-secondary);
+    border-color: var(--accent-secondary);
+}
+
+/* Footer */
+footer {
+    background-color: var(--bg-secondary);
+    padding: 1.5rem;
+    text-align: center;
+    margin-top: auto;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+}
+
+/* Responsive per mobile */
+@media (max-width: 768px) {
+    main {
+        padding: 1rem;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    pre {
+        padding: 0.5rem;
+    }
+}
+
+/* Stili per la sidebar quando presente */
+.sidebar {
+    background-color: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 8px;
+    position: sticky;
+    top: 100px;
+}
+
+.sidebar-link {
+    display: block;
+    padding: 0.5rem 0;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.sidebar-link:hover, .sidebar-link.active {
+    color: var(--accent-primary);
+    padding-left: 0.5rem;
+}
+
+/* Stili per evidenziare il codice */
+.hljs {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-radius: 6px;
+}
+
+/* Animazione di caricamento per contenuti dinamici */
+.content-loading {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255,255,255,.1);
+    border-radius: 50%;
+    border-top-color: var(--accent-primary);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Stili per note e avvisi */
+.note, .warning, .danger, .info {
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin: 0.75rem 0;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.note {
+    background-color: rgba(46, 204, 113, 0.1);
+    border-left: 4px solid var(--success);
+}
+
+.warning {
+    background-color: rgba(243, 156, 18, 0.1);
+    border-left: 4px solid var(--warning);
+}
+
+.danger {
+    background-color: rgba(231, 76, 60, 0.1);
+    border-left: 4px solid var(--danger);
+}
+
+.info {
+    background-color: rgba(52, 152, 219, 0.1);
+    border-left: 4px solid var(--info);
+}
+
+/* Risorse e link */
+.resource-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.resource-list li {
+    margin-bottom: 10px;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.resource-list li:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.resource-list a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.resource-list a:hover {
+    color: var(--text-primary);
+    text-decoration: underline;
+}
+
+/* Stili specifici per ogni sezione SIEM */
+.siem-content {
+    min-height: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+#splunk, #elastic, #qradar, #defender, #sentinel {
+    display: block;
+    margin-bottom: 1rem;
+    overflow: visible;
+}
