@@ -1,0 +1,284 @@
+<h3>Microsoft Sentinel</h3>
+<p>
+    Microsoft Sentinel è una soluzione SIEM e SOAR (Security Orchestration, Automation and Response) cloud-native basata su Azure. Combina intelligence sulle minacce e analisi dei dati per fornire rilevamento, hunting, risposta agli incidenti e automazione in un'unica piattaforma.
+</p>
+
+<div class="alert info">
+    <i class="fas fa-info-circle me-2"></i>
+    <strong>Caratteristiche principali:</strong> A differenza di Microsoft Defender, che si concentra sulla protezione di endpoint e workload Microsoft, Sentinel è una piattaforma SIEM/SOAR completa che può integrare dati da qualsiasi fonte e orchestrare risposte automatizzate.
+</div>
+
+<h4 class="mt-4">Architettura e componenti</h4>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-sitemap me-2"></i><strong>Componenti chiave di Microsoft Sentinel</strong>
+    </div>
+    <div class="card-body">
+        <ul>
+            <li><strong>Log Analytics Workspace:</strong> L'archivio dati sottostante che memorizza tutti i log e i dati di telemetria</li>
+            <li><strong>Data Connectors:</strong> Meccanismi per l'importazione di dati da varie fonti (Microsoft 365, Azure, AWS, dispositivi di rete, ecc.)</li>
+            <li><strong>Workbooks:</strong> Dashboard e visualizzazioni interattive per monitorare e analizzare i dati</li>
+            <li><strong>Analytics Rules:</strong> Regole di rilevamento per identificare le minacce</li>
+            <li><strong>Playbooks:</strong> Workflow automatizzati basati su Logic Apps per la risposta agli incidenti</li>
+            <li><strong>Notebooks:</strong> Jupyter Notebooks per analisi avanzate e threat hunting</li>
+        </ul>
+    </div>
+</div>
+
+<h4 class="mt-4">Kusto Query Language (KQL)</h4>
+<p>
+    Come Microsoft Defender, Sentinel utilizza KQL per interrogare e analizzare i dati. Tuttavia, invece di tabelle specializzate, i dati in Sentinel sono organizzati in tabelle specifiche per fonte o tipo di log.
+</p>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Tabelle comuni in Sentinel</strong>
+    </div>
+    <div class="card-body">
+        <ul>
+            <li><strong>SecurityEvent:</strong> Eventi di sicurezza Windows</li>
+            <li><strong>SigninLogs:</strong> Log di autenticazione Azure AD</li>
+            <li><strong>AuditLogs:</strong> Log di audit Azure AD</li>
+            <li><strong>OfficeActivity:</strong> Attività in Microsoft 365</li>
+            <li><strong>AzureActivity:</strong> Operazioni in Azure</li>
+            <li><strong>CommonSecurityLog:</strong> Log in formato CEF/LEEF da dispositivi di sicurezza esterni</li>
+            <li><strong>Syslog:</strong> Log di sistema da dispositivi Linux/Unix</li>
+        </ul>
+        
+        <p><strong>Esempio di query KQL in Sentinel:</strong></p>
+        <pre><code class="language-sql">SecurityEvent
+| where TimeGenerated > ago(1d)
+| where EventID == 4625
+| summarize FailedLogonCount=count() by TargetAccount, TargetUserName, IpAddress, Computer
+| where FailedLogonCount > 10
+| sort by FailedLogonCount desc</code></pre>
+        <p>
+            Questa query rileva account che hanno avuto più di 10 tentativi di login falliti nelle ultime 24 ore.
+        </p>
+    </div>
+</div>
+
+<h4 class="mt-4">Hunting e analytics</h4>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-search me-2"></i><strong>Query di hunting avanzate</strong>
+    </div>
+    <div class="card-body">
+        <p><strong>Esempio 1: Identificare tentativi di privilege escalation</strong></p>
+        <pre><code class="language-sql">SecurityEvent
+| where EventID == 4728 or EventID == 4732 or EventID == 4756
+| where TargetUserName contains "Admin"
+| project TimeGenerated, Computer, SubjectAccount, SubjectUserName, 
+    TargetAccount, TargetUserName, EventID, Activity
+| sort by TimeGenerated desc</code></pre>
+        <p>
+            Cerca eventi di aggiunta di utenti a gruppi privilegiati, che potrebbero indicare tentativi di escalation dei privilegi.
+        </p>
+        
+        <p><strong>Esempio 2: Rilevare attività anomale degli utenti</strong></p>
+        <pre><code class="language-sql">SigninLogs
+| where TimeGenerated > ago(30d)
+| where ResultType == 0
+| summarize 
+    LoginCountLastWeek = countif(TimeGenerated > ago(7d)),
+    LoginCountPrevious3Weeks = countif(TimeGenerated <= ago(7d))
+    by UserPrincipalName, Location, IPAddress
+| extend LocationRatio = LoginCountLastWeek / ((LoginCountPrevious3Weeks / 3) + 0.01)
+| where LocationRatio > 3 and LoginCountLastWeek > 5
+| sort by LocationRatio desc</code></pre>
+        <p>
+            Identifica utenti che hanno iniziato a effettuare login da nuove posizioni o IP con frequenza insolitamente elevata rispetto al loro storico.
+        </p>
+    </div>
+</div>
+
+<h4 class="mt-4">SOAR e automazione</h4>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-robot me-2"></i><strong>Playbook per la risposta automatizzata</strong>
+    </div>
+    <div class="card-body">
+        <p>I playbook in Sentinel permettono di automatizzare le risposte agli incidenti, riducendo i tempi di reazione e standardizzando la gestione.</p>
+        
+        <h5 class="mt-3">Esempi comuni di automazione:</h5>
+        <ul>
+            <li><strong>Arricchimento dell'incidente:</strong> Aggiungere dati da threat intelligence, query WHOIS, storico dell'utente</li>
+            <li><strong>Contenimento automatico:</strong> Bloccare IP, isolare host, disabilitare account</li>
+            <li><strong>Notifiche:</strong> Inviare alert a Teams, email o SMS basati su severità e tipologia</li>
+            <li><strong>Ticketing:</strong> Creare automaticamente ticket in sistemi ITSM come ServiceNow o Jira</li>
+            <li><strong>Remediation:</strong> Avviare scansioni, aggiornare policy di sicurezza, attivare script di pulizia</li>
+        </ul>
+        
+        <div class="alert note">
+            <strong>Nota importante:</strong> I playbook sono costruiti usando Azure Logic Apps, che fornisce connettori pre-costruiti per centinaia di servizi e API, rendendo relativamente semplice l'integrazione con l'ecosistema esistente.
+        </div>
+    </div>
+</div>
+
+<div class="alert warning mt-3">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>Considerazioni sul costo:</strong> Sentinel utilizza un modello di pricing basato sul volume di dati ingeriti. È importante ottimizzare la raccolta di log e applicare filtri appropriati per evitare costi eccessivi, specialmente in ambienti di grandi dimensioni.
+</div>
+
+<h4 class="mt-4">Query avanzate</h4>
+<p>
+    Le seguenti query Kusto (KQL) avanzate per Microsoft Sentinel possono aiutarti a rilevare minacce sofisticate e attività anomale nel tuo ambiente aziendale.
+</p>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Attività anomala di autenticazione</strong>
+    </div>
+    <div class="card-body">
+        <p>Rileva attività di autenticazione anomala per utenti, confrontando il comportamento recente con quello storico.</p>
+        <pre><code class="language-sql">// Interroga per trovare attività anomale di login in base alla location dell'utente
+let timeframe = 14d;
+let lookBack = 7d;
+let discoverableTimeframe = 14d;
+// Crea un dataset degli utenti che hanno effettuato l'accesso con successo
+let authenticatedUsers =
+    SigninLogs
+    | where TimeGenerated >= ago(timeframe)
+    | where ResultType == 0
+    | summarize by UserId, UserPrincipalName;
+// Trova i primi accessi per regione geografica per utente
+let firstTimeAccess =
+    SigninLogs
+    | where TimeGenerated >= ago(discoverableTimeframe)
+    | where ResultType == 0
+    | summarize FirstTimeSuccessfulAccess = min(TimeGenerated) by UserId, UserPrincipalName, Location, Country
+    | summarize FirstTimeSuccessfulAccessPerCountry = make_list(pack('Country', Country, 'Time', FirstTimeSuccessfulAccess)) by UserId, UserPrincipalName;
+// Monitora accessi recenti per identificare nuove località
+let recentAccess =
+    SigninLogs
+    | where TimeGenerated >= ago(lookBack)
+    | where ResultType == 0
+    | summarize NumAccess = count(), LastSuccessfulAccess = max(TimeGenerated) by UserId, UserPrincipalName, Location, Country;
+// Identifica accessi anomali
+let anomalousAccess =
+    recentAccess
+    | join kind=inner (
+        firstTimeAccess
+    ) on UserId, UserPrincipalName
+    | mv-expand FirstTimeSuccessfulAccessPerCountry
+    | extend 
+        Country1 = tostring(FirstTimeSuccessfulAccessPerCountry.Country),
+        FirstTimeSuccessfulAccessTime = todatetime(FirstTimeSuccessfulAccessPerCountry.Time)
+    | extend RecentLoginDiff = LastSuccessfulAccess - FirstTimeSuccessfulAccessTime
+    | where RecentLoginDiff <= lookBack
+    | where Country != Country1 // Accesso avvenuto da un paese diverso dal solito
+    | project UserPrincipalName, LastSuccessfulAccess, Country, NumAccess, FirstTimeSuccessfulAccessTime, Country1, RecentLoginDiff
+    | summarize NumNewCountries = count(), Countries = make_list(Country) by UserPrincipalName
+    | where NumNewCountries >= 2; // L'utente ha effettuato l'accesso da almeno 2 nuovi paesi
+// Output finale
+authenticatedUsers
+| join kind=inner anomalousAccess on UserPrincipalName
+| project UserPrincipalName, NumNewCountries, Countries</code></pre>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Rilevamento Kerberoasting</strong>
+    </div>
+    <div class="card-body">
+        <p>Identifica potenziali attacchi Kerberoasting, una tecnica utilizzata per ottenere credenziali di account di servizio.</p>
+        <pre><code class="language-sql">SecurityEvent
+| where EventID == 4769
+| where ServiceName != "krbtgt"
+| where ServiceName !contains "$"
+| where ServiceName !contains "@"
+| extend encryption_type = iff(TicketEncryptionType == '0x1', 'DES-CBC-CRC',
+                             iff(TicketEncryptionType == '0x3', 'DES-CBC-MD5',
+                             iff(TicketEncryptionType == '0x11', 'AES128-CTS-HMAC-SHA1-96',
+                             iff(TicketEncryptionType == '0x12', 'AES256-CTS-HMAC-SHA1-96',
+                             iff(TicketEncryptionType == '0x17', 'RC4-HMAC',
+                             iff(TicketEncryptionType == '0x18', 'RC4-HMAC-EXP',
+                                 'UNKNOWN'))))))
+| where encryption_type == "RC4-HMAC" // RC4 è più vulnerabile
+| summarize count() by TargetUserName, TargetDomainName, ClientIPAddress, Account, Computer, encryption_type
+| extend attack_potential = iff(count_ > 10, 'High', iff(count_ > 5, 'Medium', 'Low'))
+| order by count_ desc</code></pre>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Rilevamento di accesso a dati sensibili</strong>
+    </div>
+    <div class="card-body">
+        <p>Identifica l'accesso a documenti e dati classificati come sensibili in Office 365.</p>
+        <pre><code class="language-sql">// Monitora l'accesso a file sensibili in Office 365 
+let timeRange = 30d;
+let sensitiveLabels = dynamic(["Confidential", "Restricted", "Internal Only", "Highly Confidential"]);
+OfficeActivity
+| where TimeGenerated > ago(timeRange)
+| where RecordType in ("SharePointFileOperation", "OneDriveFileOperation")
+| where Operation in ("FileAccessed", "FileDownloaded", "FilePreviewed")
+| join kind=leftouter (
+    OfficeActivity
+    | where TimeGenerated > ago(timeRange)
+    | where RecordType in ("SharePointFileOperation", "OneDriveFileOperation")
+    | where Operation == "SensitivityLabelApplied"
+    | extend SensitivityLabel = tostring(parse_json(ModifiedProperties)[0].NewValue)
+    | where SensitivityLabel in~ (sensitiveLabels)
+    | summarize SensitivityLabelInfo = take_any(SensitivityLabel) by OfficeObjectId
+) on OfficeObjectId
+| where isnotempty(SensitivityLabelInfo)
+| summarize 
+    FileCount = dcount(OfficeObjectId),
+    FileList = make_set(OfficeObjectId, 100),
+    LastAccess = max(TimeGenerated)
+    by UserId, UserAgent, ClientIP, SensitivityLabelInfo
+| extend AccessLocation = tostring(parse_json(ClientIP).geoCoordinates)
+| order by FileCount desc</code></pre>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-code me-2"></i><strong>Rilevamento escalation di privilegi tramite gruppi di sicurezza sensibili</strong>
+    </div>
+    <div class="card-body">
+        <p>Identifica quando un utente viene aggiunto a gruppi privilegiati come amministratori di dominio o altri gruppi con elevati privilegi.</p>
+        <pre><code class="language-sql">// Definisci gruppi sensibili da monitorare
+let sensitiveGroups = dynamic([
+    "Domain Admins", "Enterprise Admins", "Schema Admins", "Administrators",
+    "Account Operators", "Backup Operators", "Server Operators", "Print Operators",
+    "Cert Publishers", "DnsAdmins"
+]);
+// Mappa dei codici evento Windows di interesse
+let privilegeEvents = dynamic([
+    4728, // Membro aggiunto a un gruppo globale di sicurezza
+    4732, // Membro aggiunto a un gruppo locale di sicurezza
+    4756  // Membro aggiunto a un gruppo universale di sicurezza
+]);
+// Ricerca eventi di modifica ai gruppi
+SecurityEvent
+| where TimeGenerated > ago(7d)
+| where EventID in (privilegeEvents)
+| extend GroupName = tostring(TargetUserName)
+| extend MemberName = tostring(MemberName)
+| where GroupName in~ (sensitiveGroups)
+| extend AddedAccount = iff(isempty(MemberName), AccountName, MemberName)
+| extend GroupName = substring(GroupName, 0, indexof(GroupName, "-", 0, -1, 2))
+| project TimeGenerated, Computer, EventID, Activity, 
+    GroupModified = GroupName, 
+    AccountAdded = AddedAccount, 
+    SubjectAccount = strcat(SubjectDomainName, "\\", SubjectUserName)
+| summarize 
+    FirstChange = min(TimeGenerated), 
+    LastChange = max(TimeGenerated),
+    ChangeCount = count(),
+    Computers = make_set(Computer) 
+    by SubjectAccount, GroupModified, AccountAdded
+| order by LastChange desc</code></pre>
+    </div>
+</div>
+
+<div class="alert info mt-3">
+    <i class="fas fa-book me-2"></i> <strong>Approfondimento:</strong> Per ulteriori informazioni sul linguaggio KQL e sulle tecniche di Threat Hunting in Sentinel, consulta la <a href="https://docs.microsoft.com/en-us/azure/sentinel/hunting" target="_blank">guida al Threat Hunting di Microsoft</a> e il <a href="https://github.com/Azure/Azure-Sentinel" target="_blank">repository GitHub di Azure Sentinel</a> che contiene molte query e playbook utili.
+</div>

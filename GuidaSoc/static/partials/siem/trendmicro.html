@@ -1,0 +1,218 @@
+<h3>Trend Micro</h3>
+<p>
+    Trend Micro offre soluzioni di sicurezza avanzate che integrano protezione endpoint (EDR/XDR) con funzionalità SIEM. La sua console permette la ricerca e l'analisi di eventi di sicurezza attraverso un potente linguaggio di query.
+</p>
+
+<h4 class="mt-4">Fondamenti di Trend Micro</h4>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-shield-alt me-2"></i><strong>Architettura della piattaforma</strong>
+    </div>
+    <div class="card-body">
+        <p>
+            Trend Micro Vision One è una piattaforma XDR (eXtended Detection and Response) che raccoglie e correla dati da email, endpoint, server, carichi di lavoro cloud e reti. La piattaforma consente di:
+        </p>
+        <ul>
+            <li><strong>Rilevare</strong> minacce attraverso più vettori</li>
+            <li><strong>Indagare</strong> su incidenti con analisi dettagliate</li>
+            <li><strong>Rispondere</strong> rapidamente con azioni di contenimento automatizzate</li>
+            <li><strong>Cercare</strong> proattivamente minacce con advanced hunting capabilities</li>
+        </ul>
+    </div>
+</div>
+
+<h4 class="mt-4">Linguaggio di query in Trend Micro</h4>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-terminal me-2"></i><strong>Sintassi di base</strong>
+    </div>
+    <div class="card-body">
+        <p>
+            Trend Micro utilizza un linguaggio di query proprietario per le ricerche avanzate, con una sintassi che combina elementi di SQL e linguaggi di query moderni.
+        </p>
+        
+        <h5 class="mt-3">Elementi principali della sintassi:</h5>
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Elemento</th>
+                    <th>Esempio</th>
+                    <th>Descrizione</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Specificatori di campo</td>
+                    <td><code>endpointHostName:</code></td>
+                    <td>Indica il campo su cui eseguire la ricerca</td>
+                </tr>
+                <tr>
+                    <td>Operatori di confronto</td>
+                    <td><code>processSize:>1000000</code></td>
+                    <td>Compara valori con <code>></code>, <code><</code>, <code>=</code></td>
+                </tr>
+                <tr>
+                    <td>Operatori booleani</td>
+                    <td><code>AND</code>, <code>OR</code>, <code>NOT</code></td>
+                    <td>Combinano condizioni multiple</td>
+                </tr>
+                <tr>
+                    <td>Ricerca con wildcard</td>
+                    <td><code>fileName:*.exe</code></td>
+                    <td>Cerca pattern usando <code>*</code> come wildcard</td>
+                </tr>
+                <tr>
+                    <td>Raggruppamento</td>
+                    <td><code>(processName:cmd.exe AND parentPid:0) OR processName:powershell.exe</code></td>
+                    <td>Raggruppa condizioni con parentesi</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="alert info mt-3">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Consiglio di ricerca:</strong> Nelle ricerche complesse, utilizza sempre le parentesi per definire chiaramente l'ordine di valutazione delle condizioni, evitando risultati imprevisti.
+        </div>
+    </div>
+</div>
+
+<h4 class="mt-4">Campi principali per le query</h4>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-database me-2"></i><strong>Campi essenziali per l'analisi</strong>
+    </div>
+    <div class="card-body">
+        <p>Ecco i campi più utilizzati nelle query di Trend Micro, organizzati per categoria:</p>
+        
+        <h5 class="mt-3">Identificazione dell'endpoint</h5>
+        <ul>
+            <li><code>endpointHostName:</code> - Nome dell'host endpoint</li>
+            <li><code>endpointIp:</code> - Indirizzo IP dell'endpoint</li>
+            <li><code>macAddress:</code> - Indirizzo MAC dell'endpoint</li>
+            <li><code>agentGuid:</code> - Identificatore unico dell'agente Trend Micro</li>
+        </ul>
+        
+        <h5 class="mt-3">Informazioni sui processi</h5>
+        <ul>
+            <li><code>processName:</code> - Nome del processo eseguito</li>
+            <li><code>fileName:</code> - Nome del file eseguibile</li>
+            <li><code>filePath:</code> - Percorso completo del file</li>
+            <li><code>fileHash:</code> - Hash SHA-1 del file</li>
+            <li><code>processId:</code> - ID del processo</li>
+            <li><code>parentProcessName:</code> - Nome del processo padre</li>
+            <li><code>parentProcessId:</code> - ID del processo padre</li>
+            <li><code>commandLine:</code> - Riga di comando completa</li>
+        </ul>
+        
+        <h5 class="mt-3">Informazioni sugli utenti</h5>
+        <ul>
+            <li><code>logonUser:</code> - Nome utente che ha eseguito il processo</li>
+            <li><code>logonDomain:</code> - Dominio dell'utente</li>
+            <li><code>isAdmin:</code> - Indica se il processo è stato eseguito con privilegi amministrativi</li>
+        </ul>
+        
+        <h5 class="mt-3">Informazioni di rete</h5>
+        <ul>
+            <li><code>destinationIp:</code> - IP di destinazione della connessione</li>
+            <li><code>destinationPort:</code> - Porta di destinazione</li>
+            <li><code>sourceIp:</code> - IP di origine</li>
+            <li><code>sourcePort:</code> - Porta di origine</li>
+            <li><code>protocol:</code> - Protocollo utilizzato (TCP, UDP, etc.)</li>
+            <li><code>url:</code> - URL completo richiesto</li>
+            <li><code>domainName:</code> - Nome di dominio</li>
+        </ul>
+    </div>
+</div>
+
+<h4 class="mt-4">Query di esempio per casi d'uso comuni</h4>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-search me-2"></i><strong>Rilevamento di PowerShell sospetto</strong>
+    </div>
+    <div class="card-body">
+        <pre><code class="language-sql">processName:powershell.exe AND (commandLine:*-enc* OR commandLine:*-encodedcommand* OR commandLine:*hidden* OR commandLine:*bypass* OR commandLine:*downloadstring* OR commandLine:*iex*) AND endpointHostName:*</code></pre>
+        <p>
+            Questa query identifica esecuzioni di PowerShell con parametri comunemente associati a tecniche di offuscamento o download di payload malevoli. Il filtro su <code>endpointHostName:*</code> assicura di ottenere risultati da tutti gli endpoint.
+        </p>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-network-wired me-2"></i><strong>Connessioni di rete a porte non standard</strong>
+    </div>
+    <div class="card-body">
+        <pre><code class="language-sql">destinationPort:(8080 OR 4444 OR 1337 OR 6666) AND NOT destinationIp:(10.* OR 192.168.*) AND eventType:networkConnection</code></pre>
+        <p>
+            Questa query cerca connessioni verso porte spesso utilizzate per Command & Control (C2) o reverse shell, escludendo le reti interne. Un numero elevato di queste connessioni potrebbe indicare un'infezione in corso.
+        </p>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-file-signature me-2"></i><strong>Creazione di file eseguibili sospetti</strong>
+    </div>
+    <div class="card-body">
+        <pre><code class="language-sql">filePath:(*\\AppData\\* OR *\\Temp\\*) AND fileName:*.exe AND eventType:fileCreation AND parentProcessName:(browser.exe OR outlook.exe OR winword.exe OR excel.exe)</code></pre>
+        <p>
+            Questa query rileva la creazione di file eseguibili in cartelle temporanee o dell'utente da parte di applicazioni come browser o client di posta elettronica, pattern tipico di infezioni da malware.
+        </p>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-user-shield me-2"></i><strong>Tentativi di escalation di privilegi</strong>
+    </div>
+    <div class="card-body">
+        <pre><code class="language-sql">processName:(net.exe OR net1.exe) AND commandLine:(*localgroup* AND *admin*) AND NOT logonUser:administrator</code></pre>
+        <p>
+            Questa query identifica tentativi di aggiungere utenti ai gruppi amministrativi attraverso i comandi "net" da parte di utenti non amministratori, un indicatore comune di tentativi di escalation di privilegi.
+        </p>
+    </div>
+</div>
+
+<div class="alert info mt-3">
+    <i class="fas fa-lightbulb me-2"></i>
+    <strong>Consiglio:</strong> Per ottimizzare le prestazioni delle query su grandi volumi di dati, limitare sempre l'intervallo temporale della ricerca utilizzando il selettore di date nella console.
+</div>
+
+<h4 class="mt-4">Integrazione con flussi di lavoro SOC</h4>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-cogs me-2"></i><strong>Automazione e risposta</strong>
+    </div>
+    <div class="card-body">
+        <p>
+            Trend Micro si integra nei flussi di lavoro SOC tramite funzionalità di risposta automatica e integrazione con sistemi SOAR:
+        </p>
+        <ol>
+            <li><strong>Response Actions:</strong> Azioni dirette come isolamento endpoint, terminazione processo, blocco IP</li>
+            <li><strong>Playbook automatizzati:</strong> Sequenze di azioni predefinite per rispondere a tipi di incidenti specifici</li>
+            <li><strong>API Integrations:</strong> Connessione con strumenti SOAR e SIEM di terze parti</li>
+            <li><strong>Workbench:</strong> Console unificata per la gestione degli incidenti</li>
+        </ol>
+        
+        <p class="mt-3">
+            Esempio di flusso di risposta per un incidente di malware:
+        </p>
+        <ol>
+            <li><strong>Rilevamento:</strong> La piattaforma identifica un file sospetto</li>
+            <li><strong>Analisi:</strong> Esecuzione automatica di analisi comportamentale e sandbox</li>
+            <li><strong>Contenimento:</strong> Isolamento automatico dell'endpoint infetto</li>
+            <li><strong>Indagine:</strong> Raccolta di artefatti e ricerca di IOC correlati</li>
+            <li><strong>Remediation:</strong> Terminazione processi, quarantena file e ripristino sistema</li>
+        </ol>
+    </div>
+</div>
+
+<div class="alert info mt-3">
+    <i class="fas fa-book me-2"></i> <strong>Approfondimento:</strong> Per ulteriori informazioni e documentazione completa su Trend Micro Vision One e le sue capacità XDR, consulta la <a href="https://www.trendmicro.com/en_us/business/products/detection-response/xdr.html" target="_blank">documentazione ufficiale</a> e il <a href="https://success.trendmicro.com/" target="_blank">portale di Knowledge Base</a>.
+</div>
