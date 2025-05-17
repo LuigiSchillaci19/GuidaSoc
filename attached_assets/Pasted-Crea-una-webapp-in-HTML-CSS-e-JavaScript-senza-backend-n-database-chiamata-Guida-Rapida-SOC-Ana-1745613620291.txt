@@ -1,0 +1,66 @@
+Crea una webapp in HTML, CSS e JavaScript (senza backend né database) chiamata "Guida Rapida SOC Analyst", pensata per formare 10 nuovi SOC analyst che entreranno in azienda tra 10 giorni.
+
+La webapp deve essere:
+- Interamente in italiano
+- Statica (nessuna registrazione o tracciamento)
+- Navigabile liberamente, ottimizzata per desktop e mobile
+
+Struttura del sito:
+
+1. **Homepage**  
+   - Introduzione al SOC  
+   - Obiettivi del percorso formativo  
+
+2. **Sezione "SIEM"**  
+   Include sottosezioni con spiegazioni e **query avanzate reali** per ogni piattaforma:
+   - **Splunk**
+     - Sintassi di base
+     - Uso di `stats`, `eval`, `rex`, `lookup`
+     - Esempi: individuare login sospetti, esfiltrazione dati
+     - Creazione di dashboard e alert
+   - **Elastic Security**
+     - Query DSL e KQL
+     - Regole predefinite e personalizzate
+     - Hunting con `process.name`, `file.path`, `event.action`
+   - **Microsoft Defender 360**
+     - Uso di Advanced Hunting con KQL
+     - Query per file sospetti, esecuzioni anomale, PowerShell
+     - Esempi pratici di indagine
+   - **IBM QRadar**
+     - Uso di AQL (Advanced Query Language)
+     - Casi d’uso: malware, C2 traffic, user behavior
+     - Creazione di offenses custom
+
+3. **Sezione "Analisi Mail Phishing"**  
+   Guida completa all’analisi manuale:
+   - **Header Analysis**
+     - Analisi campi `From`, `Reply-To`, `Return-Path`
+     - Identificazione di anomalie nei mittenti
+   - **DKIM, SPF e DMARC**
+     - Come leggerli dai header (esempi reali)
+     - Spiegazione dei record DNS e cosa significano
+     - Come interpretare un `pass` o `fail`
+   - **Analisi Link**
+     - Tecniche comuni di offuscamento
+     - Strumenti per decodifica URL (JS script incluso)
+   - **Analisi Allegati**
+     - Analisi di allegati `.docm`, `.xlsm`, `.iso`
+     - Come identificare macro e payload
+     - Indicatori comportamentali
+   - **Strumenti consigliati**
+     - olevba, emldump, urlscan.io, any.run (link utili)
+
+4. **Glossario**  
+   - Termini tecnici SOC e SIGLATI (IOC, APT, TTP, MITRE, ecc.)
+
+5. **Contatti e Risorse**  
+   - PDF da scaricare
+   - Link a documentazione ufficiale
+   - Corso avanzato consigliato
+
+Design:
+- Tema dark professionale
+- Menu laterale o navbar orizzontale
+- Ogni sezione caricata dinamicamente in una `<div>` con JS
+
+Tutto deve essere scritto in italiano chiaro e pensato per chi è al primo giorno nel mondo SOC.

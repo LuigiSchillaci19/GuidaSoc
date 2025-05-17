@@ -18,14 +18,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/atom-one-dark.min.css">
     
     <!-- CSS personalizzato -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <!-- Header e navigazione -->
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark">
             <div class="container">
-                <a class="navbar-brand" href="">
+                <a class="navbar-brand" href="index.html">
                     <i class="fas fa-shield-alt me-2"></i>GuidaSoc
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" id="navbar-toggler">
@@ -34,37 +34,32 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
-                            <a class="nav-link active" href="#home" onclick="loadContent('home'); return false;">
+                            <a class="nav-link active" href="#home" id="nav-home">
                                 <i class="fas fa-home me-1"></i> Home
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#siem" onclick="loadContent('siem'); return false;">
+                            <a class="nav-link" href="#siem" id="nav-siem">
                                 <i class="fas fa-chart-line me-1"></i> SIEM & EDR/XDR
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#phishing" onclick="loadContent('phishing'); return false;">
+                            <a class="nav-link" href="#phishing" id="nav-phishing">
                                 <i class="fas fa-fish me-1"></i> Analisi Phishing
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#malware" onclick="loadContent('malware'); return false;">
-                                <i class="fas fa-bug me-1"></i> Malware Analysis
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#glossario" onclick="loadContent('glossario'); return false;">
+                            <a class="nav-link" href="#glossario" id="nav-glossario">
                                 <i class="fas fa-book me-1"></i> Glossario
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#eventcode" onclick="loadContent('eventcode'); return false;">
+                            <a class="nav-link" href="#eventcode" id="nav-eventcode">
                                 <i class="fas fa-key me-1"></i> Event Code
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#risorse" onclick="loadContent('risorse'); return false;">
+                            <a class="nav-link" href="#risorse" id="nav-risorse">
                                 <i class="fas fa-download me-1"></i> Risorse
                             </a>
                         </li>
@@ -95,15 +90,12 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Highlight.js per evidenziare la sintassi del codice -->
-    <script src="highlight.min.js"></script>
+    <script src="js/highlight.min.js"></script>
     
     <!-- JavaScript personalizzato -->
-    <script src="main.js"></script>
+    <script src="js/main.js?v=1.2"></script>
     
     <!-- JavaScript specifico per SIEM tabs -->
-    <script src="siem-tabs.js"></script>
-    
-    <!-- JavaScript specifico per Malware Analysis tabs -->
-    <script src="menu_malware.js"></script>
+    <script src="js/siem-tabs.js?v=1.1"></script>
 </body>
 </html>

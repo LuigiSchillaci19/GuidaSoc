@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisi File PDF - GuidaSOC</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-content">
+        <div id="sidebar-placeholder"></div>
+        
+        <div class="content">
+            <div class="container">
+                <h1 class="mb-4">Analisi dei File PDF Malevoli</h1>
+                <p class="lead">I file PDF possono contenere JavaScript dannoso, exploit o altri payload. Ecco come analizzarli in sicurezza.</p>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Analisi con peepdf</h4>
+                    </div>
+                    <div class="card-body">
+                        <pre><code class="language-bash">python2 peepdf.py a2852936a7e33787c0ab11f346631d89.pdf</code></pre>
+                        <p>Questo comando mostra la struttura del PDF e gli oggetti contenuti, come eventuali script JavaScript malevoli.</p>
+                        
+                        <div class="text-center my-4">
+                            <a href="attached_assets/Pasted image 20250517171133.png" target="_blank" class="image-link">
+                                <img src="attached_assets/Pasted image 20250517171133.png" alt="Output del comando peepdf" class="img-fluid border rounded shadow-sm" style="max-width: 90%;">
+                                <div class="overlay"><i class="fas fa-search-plus"></i></div>
+                            </a>
+                            <p class="text-muted mt-2"><small>Esempio di output del comando peepdf che mostra la struttura di un PDF malevolo con oggetti JavaScript sospetti</small></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Estrazione e analisi di oggetti specifici</h4>
+                    </div>
+                    <div class="card-body">
+                        <p>Per estrarre e analizzare il contenuto di uno specifico oggetto, ad esempio l'oggetto numero 18 che contiene codice JavaScript, si usa <code>pdf-parser</code> con questi parametri:</p>
+                        
+                        <pre><code class="language-bash">pdf-parser -o 18 -d codec.js a2852936a7e33787c0ab11f346631d89.pdf</code></pre>
+                        
+                        <ul class="mt-3">
+                            <li><code>-o 18</code>: indica l'<strong>oggetto</strong> del PDF da estrarre, in questo caso l'oggetto numero 18, che corrisponde al codice JavaScript sospetto.</li>
+                            <li><code>-d codec.js</code>: specifica il <strong>nome del file</strong> dove verrà salvato il contenuto estratto (il codice JavaScript in chiaro).</li>
+                            <li><code>-f</code>: applica i <strong>filtri di decompressione</strong> per decodificare il contenuto (ad esempio FlateDecode, ASCIIHexDecode, ASCII85Decode, LZWDecode, RunLengthDecode), in modo da ottenere il codice leggibile e non compresso.</li>
+                        </ul>
+                        
+                        <div class="text-center my-4">
+                            <a href="attached_assets/Pasted image 20250517171645.png" target="_blank" class="image-link">
+                                <img src="attached_assets/Pasted image 20250517171645.png" alt="Esempio di estrazione e analisi di JavaScript in un PDF" class="img-fluid border rounded shadow-sm" style="max-width: 90%;">
+                                <div class="overlay"><i class="fas fa-search-plus"></i></div>
+                            </a>
+                            <p class="text-muted mt-2"><small>Esempio di estrazione e analisi di un oggetto JavaScript in un PDF malevolo che mostra un tentativo di phishing per credenziali Amazon</small></p>
+                        </div>
+                        
+                        <div class="alert alert-warning bg-warning text-dark">
+                            <h5 class="alert-heading fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Cosa cercare nel codice JavaScript</h5>
+                            <p>Nel codice JavaScript estratto, cerca:</p>
+                            <ul class="mb-0">
+                                <li>Funzioni sospette come <code class="bg-dark text-white px-1">eval()</code>, <code class="bg-dark text-white px-1">unescape()</code></li>
+                                <li>Stringhe offuscate con lunghe sequenze esadecimali</li>
+                                <li>Codice che tenta di eseguire download o chiamate HTTP</li>
+                                <li>Funzioni che sfruttano vulnerabilità note come heap spray</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Altri strumenti per l'analisi di PDF</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul>
+                            <li>
+                                <strong>PDFiD</strong>
+                                <pre><code class="language-bash">pdfid.py file.pdf</code></pre>
+                                <p>Identifica rapidamente elementi sospetti in un file PDF, come JavaScript, azioni automatiche, o caratteristiche tipiche di exploit.</p>
+                            </li>
+                            <li>
+                                <strong>pdf-parser</strong>
+                                <pre><code class="language-bash">pdf-parser.py --search JavaScript file.pdf</code></pre>
+                                <p>Cerca specifici elementi all'interno di un PDF, utile per trovare codice offuscato o nascosto.</p>
+                            </li>
+                            <li>
+                                <strong>pdfexaminer.com</strong>
+                                <p>Servizio online che permette di caricare e analizzare un file PDF, fornendo un report dettagliato su potenziali minacce.</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card mb-4 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Playbook di Analisi PDF</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="border-bottom pb-2">Raccolta Informazioni</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item border-0 ps-0">
+                                        <strong>Identificazione del tipo di file:</strong>
+                                        <ul>
+                                            <li><code>file &lt;documento&gt;</code> → Verifica estensione e integrità</li>
+                                            <li><code>exiftool &lt;documento&gt;</code> → Analisi dei metadati</li>
+                                        </ul>
+                                    </li>
+                                    <li class="list-group-item border-0 ps-0">
+                                        <strong>Hashing e identificazione:</strong>
+                                        <ul>
+                                            <li><code>sha256sum &lt;documento&gt;</code> → Calcolo dell'hash</li>
+                                            <li>Verifica su VirusTotal, Malshare, Hybrid Analysis</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="border-bottom pb-2">Analisi Statica PDF</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item border-0 ps-0">
+                                        <code>pdfid &lt;documento.pdf&gt;</code> → Identifica oggetti sospetti
+                                    </li>
+                                    <li class="list-group-item border-0 ps-0">
+                                        <code>pdf-parser -o 1 &lt;documento.pdf&gt;</code> → Estrae e analizza oggetti specifici
+                                    </li>
+                                    <li class="list-group-item border-0 ps-0">
+                                        <code>peepdf</code> → GUI interattiva per navigare nel PDF
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch("sidebar.html")
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("sidebar-placeholder").innerHTML = data;
+                    setupSidebar(); // Funzione presente in main.js
+                });
+                
+            // Inizializza highlight.js
+            if (typeof hljs !== 'undefined') {
+                hljs.highlightAll();
+            } else {
+                console.warn('Highlight.js non è stato caricato correttamente');
+            }
+            
+            // Aggiungi funzionalità per lo zoom delle immagini
+            document.querySelectorAll('.image-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Permette il comportamento predefinito di aprire l'immagine in una nuova finestra
+                });
+            });
+        });
+    </script>
+</body>
+</html>

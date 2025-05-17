@@ -1,0 +1,180 @@
+1. Trovare l'hash del file
+
+Certutil -hashfile file.exe SHA256 (o MD5 etc)   - Per CMD
+
+sha256sum file.exe  - per linux
+
+2. Caricare l'hash su Virustotal
+Campi da attenzionare: 
+### 🗂 **Details:**
+
+- **File Type:** Identifica se è un eseguibile, script, documento, ecc.
+    
+- **File Size:** Indica se è un payload complesso o un semplice dropper.
+    
+- **Compilation Date:** Verifica se è coerente con la versione del software o se è stata modificata.
+    
+- **Packer/Protector:** Controlla se è offuscato o protetto da un packer (es. UPX, Themida, ecc.).
+    
+- **Import Table:** Verifica le librerie utilizzate (`kernel32.dll`, `advapi32.dll`, ecc.).
+    
+- **Sections:** Osserva nomi sospetti o dimensioni anomale (es. `.text`, `.data`, `.rdata`).
+    
+- **Digital Signature:** Se presente, verifica l'attendibilità e l'autenticità.
+    
+
+---
+
+### 🔎 **Behavior:**
+    
+- **Registry Modifications:** Controlla se scrive chiavi persistenti, modifica chiavi di sistema o disabilita Windows Defender.
+    
+- **Network Communication:** Analizza chiamate HTTP/HTTPS, richieste DNS e IP sospetti.
+    
+- **Processes Created/Tree:** Verifica se esegue PowerShell, CMD o altri processi di sistema.
+    
+- **Mutexes Created:** Segnala se cerca di evitare duplicazioni sullo stesso sistema.
+    
+
+---
+
+### 🔗 **Relations:**
+
+- **Execution Files:** Verifica se è stato scaricato da un sito malevolo o è parte di un bundle.
+    
+- **Dropped Files:** Controlla eventuali file che il malware potrebbe aver rilasciato nel sistema.
+    
+- **Contacted IP/Domain:** Identifica connessioni a Command and Control (C2) server.
+    
+
+---
+
+### 👥 **Community:**
+
+- **Community Analysis:** Osserva i commenti della community per intuizioni aggiuntive.
+    
+- **Tags:** Verifica se sono presenti tag come "Ransomware", "Trojan", "Keylogger", ecc.
+    
+- **Reports and Links:** Controlla eventuali link a Hybrid Analysis, Any.Run o rapporti esterni.
+
+
+3. String & FLOSS: analisi delle stringhe
+
+strings file.exe
+floss file.exe 
+
+floss è un'evoluzione di strings, oltre alle stringhe in chiaro, **rileva e decodifica stringhe offuscate o criptate** che normalmente non sarebbero visibili con strings
+![[Pasted image 20250517124433.png]]
+
+4. Analizzare la tabella di import adress con PEView
+
+Le **Section** rappresentano diverse aree di memoria utilizzate dal programma durante l'esecuzione. 
+
+.text Contiene il codice eseguibile (le istruzioni del programma)
+
+.data Area di memoria che contiene dati globali e variabili statiche
+
+.rdata Contiene dati di sola lettura, come le stringhe costanti e le Import Table
+
+.bss Sezione non inizializzata, usata per variabili globali non inizializzate
+
+.idata Contiene la Import Table, con le librerie e le funzioni importate. 
+### Checklist Analisi Statica Malware ()
+
+-  1. Calcolare hash file (SHA256/MD5).
+    
+-  2. Cercare hash su VirusTotal e consultare community/security feed (inclusa intelligence software).
+    
+-  3. Verificare relazioni: file parent, dropped files, IP/domini contattati.
+    
+-  4. Estrarre stringhe con `strings` e `floss`.
+    
+-  5. Verificare presenza e validità firme digitali.
+    
+-  6. Controllare telemetrie dispositivo (eventi sistema, log sicurezza, EDR).
+    
+-  7. Analizzare struttura PE (sezioni, dimensioni, import table) con PEview o pestudio.
+    
+-  8. Controllare funzioni API importate potenzialmente pericolose.
+    
+-  9. Individuare packing/offuscamento (Virtual Size > Raw Data, nomi sezioni sospetti, entropia alta).
+    
+-  10. Documentare e creare report completo.
+.rsrc Contiene le risorse del programma, come icone, immagini, menu, e stringhe localizzate.
+
+Inziamo con Image_SECTION_HEADER text:
+- **Virtual Size:** Dimensione della sezione in memoria (RAM) quando viene caricata dal loader di Windows.
+    
+- **Size of Raw Data:** Dimensione effettiva della sezione nel file PE sul disco.
+
+Quando il **Virtual Size** di una sezione è maggiore del **Size of Raw Data**, significa che la sezione, una volta caricata in memoria, occupa più spazio rispetto a quello effettivamente presente sul disco.
+
+Questo comportamento può essere un indicatore di vari comportamenti anomali come codice malevole o Packed Malware.
+![[Pasted image 20250517124517.png]]
+
+In Section .rdata -> Import Address_Table si trovano proprio le **Windows API** (Application Programming Interface), cioè quelle funzioni fornite dal sistema operativo Windows per svolgere operazioni comuni, ecco alcuni esempi di windows api chiamate da un malware:
+- **CreateFile** — per creare o aprire file
+    
+- **WriteFile** — per scrivere dati su file
+    
+- **VirtualAlloc** — per allocare memoria in modo dinamico (es. shellcode)
+    
+- **CreateProcess** — per avviare nuovi processi
+    
+- **Connect** — per stabilire connessioni di rete (C2)
+![[Pasted image 20250517124546.png]]
+Una volta trovata la funzione e la libreria utilizzata, basta una ricerca su google per capirne il funzionamento.
+![[Pasted image 20250517124609.png]]
+Es InternetOpenUrlW
+![[Pasted image 20250517121230.png]]
+
+Una risorsa utile è https://malapi.io/, che aiuta a comprendere come determinate API di Windows vengono utilizzate per attività malevole.
+
+**Come capire se un malware è packed?** E perchè renderlo packed?
+
+Il packing nasconde il codice reale del malware rendendo difficile l’analisi con strumenti automatici (antivirus, scanner statici). Il file appare “incomprensibile” finché non viene eseguito e decompresso in memoria.
+
+Il packing può anche comprimere il malware, rendendo il file più piccolo e facile da distribuire.
+
+COme capire se un malware è packed?
+ Se il **Virtual Size** (la dimensione in memoria) è molto più grande del **Size of Raw Data** (la dimensione sul disco), questo può indicare che la sezione contiene dati compressi o criptati, tipico di un file packed.
+ 
+Un file packed spesso nasconde o minimizza le importazioni per evitare l’analisi. Se vedi pochissime o nessuna funzione importata, è sospetto.
+
+ Se nel PE ci sono sezioni con nomi come `.upx`, `.packed`, `.crypt`, o nomi non standard, probabilmente è packed.
+ ![[Pasted image 20250517124939.png]]
+Software come **PEiD**, **Detect It Easy (DIE)**, **Exeinfo PE** o **PE-bear** identificano automaticamente se un file è packed e quale packer viene utilizzato.
+![[Pasted image 20250517124908.png]]
+
+Un tool automatizzato per l’analisi statica è **pestudio**.  
+Esso individua automaticamente se un file è packed o protetto da packer noti, evidenzia funzioni API potenzialmente pericolose utilizzate dal file e segnala indicatori di possibile malware, come modifiche a chiavi di registro, comunicazioni di rete sospette e firme digitali assenti o non valide.
+
+![[Pasted image 20250517125447.png]]
+
+Un altro tool utilizzato per l'analisi automatizzata è **CAPA**. Questo strumento permette di identificare rapidamente le capacità e i comportamenti potenzialmente malevoli di un file analizzandone il codice senza eseguirlo. CAPA rileva pattern specifici nel binario, come chiamate a API di sistema, stringhe sospette e tecniche di offuscamento, fornendo un report chiaro e dettagliato sulle funzionalità del malware
+
+![[Pasted image 20250517125615.png]]
+
+![[Pasted image 20250517125856.png]]
+
+### Checklist Analisi Statica Malware ()
+
+-  1. Calcolare hash file (SHA256/MD5).
+    
+-  2. Cercare hash su VirusTotal e consultare community/security feed (inclusa intelligence software).
+    
+-  3. Verificare relazioni: file parent, dropped files, IP/domini contattati.
+    
+-  4. Estrarre stringhe con `strings` e `floss`.
+    
+-  5. Verificare presenza e validità firme digitali.
+    
+-  6. Controllare telemetrie dispositivo (eventi sistema, log sicurezza, EDR).
+    
+-  7. Analizzare struttura PE (sezioni, dimensioni, import table) con PEview o pestudio.
+    
+-  8. Controllare funzioni API importate potenzialmente pericolose.
+    
+-  9. Individuare packing/offuscamento (Virtual Size > Raw Data, nomi sezioni sospetti, entropia alta).
+    
+-  10. Documentare e creare report completo.

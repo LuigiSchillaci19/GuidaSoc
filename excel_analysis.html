@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisi File Excel - GuidaSOC</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-content">
+        <div id="sidebar-placeholder"></div>
+        
+        <div class="content">
+            <div class="container">
+                <h1 class="mb-4">Analisi dei File Excel Malevoli</h1>
+                <p class="lead">I file Excel possono contenere macro VBA malevole o altri meccanismi per eseguire codice dannoso. Ecco come analizzarli in sicurezza.</p>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Analisi di File Excel (.xlsm)</h4>
+                    </div>
+                    <div class="card-body">
+                        <ol>
+                            <li>
+                                <strong>Estrazione del contenuto</strong>
+                                <pre><code class="language-bash">unzip file.xlsm</code></pre>
+                                <p>Dentro vedrai cartelle come:</p>
+                                <ul>
+                                    <li><code>xl/</code> — contiene fogli di lavoro, macro (<code>vbaProject.bin</code>), e altro</li>
+                                    <li><code>docProps/</code> — proprietà del documento</li>
+                                    <li><code>_rels/</code> — file di relazioni tra componenti</li>
+                                    <li><code>[Content_Types].xml</code> — informazioni sul tipo di contenuto</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Analisi delle macro con oledump</strong>
+                                <pre><code class="language-bash">oledump.py file.xlsm</code></pre>
+                                
+                                <div class="text-center my-4">
+                                    <a href="attached_assets/Pasted image 20250517165025.png" target="_blank" class="image-link">
+                                        <img src="attached_assets/Pasted image 20250517165025.png" alt="Output di oledump su file Excel" class="img-fluid border rounded shadow-sm" style="max-width: 90%;">
+                                        <div class="overlay"><i class="fas fa-search-plus"></i></div>
+                                    </a>
+                                    <p class="text-muted mt-2"><small>Output di oledump mostrando i moduli VBA presenti in un file Excel sospetto</small></p>
+                                </div>
+                                
+                                <p>La <strong>M</strong> indica un <strong>modulo standard</strong> VBA, cioè un modulo contenente codice VBA scritto dall'utente che non è legato a un particolare oggetto.</p>
+                                <p>La <strong>m</strong> indica un <strong>modulo di classe o modulo oggetto</strong>, ovvero un modulo VBA associato a un oggetto specifico nel file Excel, come il workbook stesso (<code>ThisWorkbook</code>).</p>
+                            </li>
+                            <li>
+                                <strong>Visualizzazione del contenuto del modulo</strong>
+                                <pre><code class="language-bash">oledump.py -s 4 sampleExcelFile.xlsm    # Visualizza il modulo numero 4</code></pre>
+                                
+                                <div class="text-center my-4">
+                                    <a href="attached_assets/Pasted image 20250517165118.png" target="_blank" class="image-link">
+                                        <img src="attached_assets/Pasted image 20250517165118.png" alt="Output di oledump mostrando contenuto VBA" class="img-fluid border rounded shadow-sm" style="max-width: 90%;">
+                                        <div class="overlay"><i class="fas fa-search-plus"></i></div>
+                                    </a>
+                                    <p class="text-muted mt-2"><small>Dump esadecimale del contenuto del modulo che mostra potenziale codice malevolo</small></p>
+                                </div>
+                            </li>
+                            <li>
+                                <strong>Analisi delle stringhe del modulo</strong>
+                                <pre><code class="language-bash">oledump.py -s 4 -S sampleExcelFile.xlsm    # Mostra solo le stringhe del modulo</code></pre>
+                                
+                                <div class="text-center my-4">
+                                    <a href="attached_assets/Pasted image 20250517165136.png" target="_blank" class="image-link">
+                                        <img src="attached_assets/Pasted image 20250517165136.png" alt="Output di oledump mostrando stringhe VBA" class="img-fluid border rounded shadow-sm" style="max-width: 90%;">
+                                        <div class="overlay"><i class="fas fa-search-plus"></i></div>
+                                    </a>
+                                    <p class="text-muted mt-2"><small>Stringhe estratte dal modulo VBA che mostrano comandi sospetti incluso un download di file eseguibile</small></p>
+                                </div>
+                            </li>
+                            <li>
+                                <strong>Decompressione di moduli VBA corrotti</strong>
+                                <pre><code class="language-bash">oledump.py -s 4 --vbadecompresscorrupt sampleExcelFile.xlsm</code></pre>
+                                <p>L'opzione <code class="bg-dark text-white px-1">--vbadecompresscorrupt</code> serve per decomprimere moduli VBA corrotti o danneggiati che spesso vengono utilizzati per nascondere codice malevolo.</p>
+                                
+                                <div class="text-center my-4">
+                                    <a href="attached_assets/Pasted image 20250517165206.png" target="_blank" class="image-link">
+                                        <img src="attached_assets/Pasted image 20250517165206.png" alt="Risultato della decompressione di VBA corrotto" class="img-fluid border rounded shadow-sm" style="max-width: 90%;">
+                                        <div class="overlay"><i class="fas fa-search-plus"></i></div>
+                                    </a>
+                                    <p class="text-muted mt-2"><small>Risultato della decompressione di un modulo VBA corrotto che mostra codice malevolo completo con download di eseguibile</small></p>
+                                </div>
+                            </li>
+                        </ol>
+                        
+                        <div class="alert alert-warning bg-warning text-dark">
+                            <h5 class="alert-heading fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Attenzione: Rischio template remoti</h5>
+                            <p class="mb-0">Un file Excel <code class="bg-dark text-white px-1">.xlsx</code> o <code class="bg-dark text-white px-1">.xlsm</code> può puntare a un template esterno di tipo <code class="bg-dark text-white px-1">.xltm</code>. Questo template può essere caricato da un percorso remoto e, se compromesso, può eseguire macro malevole all'apertura.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Playbook di Analisi Excel</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="border-bottom pb-2">Raccolta Informazioni</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item border-0 ps-0">
+                                        <strong>Identificazione del tipo di file:</strong>
+                                        <ul>
+                                            <li><code>file &lt;documento&gt;</code> → Verifica estensione e integrità</li>
+                                            <li><code>exiftool &lt;documento&gt;</code> → Analisi dei metadati</li>
+                                        </ul>
+                                    </li>
+                                    <li class="list-group-item border-0 ps-0">
+                                        <strong>Hashing e identificazione:</strong>
+                                        <ul>
+                                            <li><code>sha256sum &lt;documento&gt;</code> → Calcolo dell'hash</li>
+                                            <li>Verifica su VirusTotal, Malshare, Hybrid Analysis</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="border-bottom pb-2">Analisi Statica Excel</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item border-0 ps-0">
+                                        <code>olevba &lt;documento.xlsm&gt;</code> → Estrazione di macro VBA
+                                    </li>
+                                    <li class="list-group-item border-0 ps-0">
+                                        <code>oledump.py &lt;documento.xls&gt;</code> → Macro e oggetti nascosti
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch("sidebar.html")
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("sidebar-placeholder").innerHTML = data;
+                    setupSidebar(); // Funzione presente in main.js
+                });
+                
+            // Inizializza highlight.js
+            if (typeof hljs !== 'undefined') {
+                hljs.highlightAll();
+            } else {
+                console.warn('Highlight.js non è stato caricato correttamente');
+            }
+            
+            // Aggiungi funzionalità per lo zoom delle immagini
+            document.querySelectorAll('.image-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Permette il comportamento predefinito di aprire l'immagine in una nuova finestra
+                });
+            });
+        });
+    </script>
+</body>
+</html>

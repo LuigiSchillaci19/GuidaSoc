@@ -301,3 +301,60 @@ footer {
     margin-bottom: 1rem;
     overflow: visible;
 }
+
+/* Stile per le immagini con overlay per zoom */
+.image-link {
+    position: relative;
+    display: inline-block;
+    cursor: zoom-in;
+}
+
+.image-link .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.image-link:hover .overlay {
+    opacity: 1;
+}
+
+.image-link .overlay i {
+    color: white;
+    font-size: 2rem;
+}
+
+/* Stile migliorato per i playbook */
+.card.border-primary {
+    border-width: 1px;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.1);
+}
+
+.card.border-primary .card-header {
+    border-bottom: none;
+    font-weight: 600;
+}
+
+.card-body .border-bottom {
+    border-color: rgba(0, 123, 255, 0.2) !important;
+}
+
+.list-group-item.border-0.ps-0 {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Miglioramento leggibilità codice */
+code.bg-dark.text-white {
+    display: inline-block;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+}

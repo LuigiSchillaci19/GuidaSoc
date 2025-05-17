@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisi Dinamica - GuidaSOC</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-content">
+        <div id="sidebar-placeholder"></div>
+        
+        <div class="content">
+            <div class="container">
+                <h1 class="mb-4">Analisi Dinamica del Malware</h1>
+                <p class="lead">L'analisi dinamica consiste nell'eseguire il malware in un ambiente controllato (sandbox) per osservarne il comportamento reale.</p>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Preparazione dell'ambiente</h4>
+                    </div>
+                    <div class="card-body">
+                        <ol>
+                            <li>
+                                <strong>Creare una macchina virtuale isolata</strong>
+                                <p>Preferibilmente usando software come VirtualBox o VMware con snapshot abilitati</p>
+                            </li>
+                            <li>
+                                <strong>Disabilitare la connessione di rete</strong>
+                                <p>A meno che non sia necessario per l'analisi, in tal caso utilizzare una rete isolata</p>
+                            </li>
+                            <li>
+                                <strong>Installare strumenti di monitoraggio</strong>
+                                <ul>
+                                    <li>Process Monitor (ProcMon) - per monitorare l'attività del filesystem, registro e processi</li>
+                                    <li>Process Explorer - per visualizzare processi attivi e le loro dipendenze</li>
+                                    <li>Wireshark - per monitorare il traffico di rete (solo se necessario)</li>
+                                    <li>RegShot - per catturare e confrontare i cambiamenti al registro di sistema</li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Esecuzione controllata</h4>
+                    </div>
+                    <div class="card-body">
+                        <ol>
+                            <li>
+                                <strong>Fare uno snapshot pre-esecuzione</strong>
+                                <p>Per poter ripristinare lo stato iniziale dopo l'analisi</p>
+                            </li>
+                            <li>
+                                <strong>Avviare tutti gli strumenti di monitoraggio</strong>
+                            </li>
+                            <li>
+                                <strong>Eseguire il malware</strong>
+                                <p>Osservare attentamente:</p>
+                                <ul>
+                                    <li>Processi figli creati</li>
+                                    <li>Modifiche al registro di sistema</li>
+                                    <li>File creati o modificati</li>
+                                    <li>Connessioni di rete tentate o stabilite</li>
+                                    <li>Comportamenti persistenti (autostart)</li>
+                                </ul>
+                            </li>
+                        </ol>
+                        
+                        <div class="alert alert-warning mt-3">
+                            <h5 class="alert-heading fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Anti-Analisi</h5>
+                            <p>I malware moderni spesso implementano tecniche per rilevare ambienti di analisi:</p>
+                            <ul class="mb-0">
+                                <li><strong>Rilevamento di macchine virtuali</strong> - Cercano indicatori di VM come driver specifici</li>
+                                <li><strong>Sleep loops</strong> - Attendono lunghi periodi prima di attivare il payload malevolo</li>
+                                <li><strong>Rilevamento di debugger</strong> - Verificano la presenza di strumenti di analisi</li>
+                                <li><strong>Rilevamento di sandbox</strong> - Cercano segni di ambienti automatizzati di analisi</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Analisi dei risultati</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Cosa cercare nei log:</h5>
+                        <ul>
+                            <li>
+                                <strong>Processi:</strong>
+                                <ul>
+                                    <li>Creazione di processi sospetti</li>
+                                    <li>Iniezione di codice in altri processi</li>
+                                    <li>Terminazione di processi di sicurezza (antivirus, firewall)</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>File system:</strong>
+                                <ul>
+                                    <li>Creazione di file eseguibili o DLL in percorsi sospetti</li>
+                                    <li>Modifiche a file di sistema</li>
+                                    <li>Creazione di file nascosti o con attributi speciali</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Registro:</strong>
+                                <ul>
+                                    <li>Modifiche alle chiavi di autorun</li>
+                                    <li>Disabilitazione di servizi di sicurezza</li>
+                                    <li>Cambiamenti alle impostazioni di rete o sistema</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Rete:</strong>
+                                <ul>
+                                    <li>Connessioni a indirizzi IP o domini sospetti</li>
+                                    <li>Comunicazioni non standard (DNS tunneling, protocolli offuscati)</li>
+                                    <li>Trasferimento di dati sensibili</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card mb-4 border-primary">
+                    <div class="card-header bg-primary bg-opacity-10 text-primary">
+                        <h4 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Playbook Completo di Analisi Dinamica</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info bg-info bg-opacity-10 mb-4">
+                            <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Obiettivo dell'analisi dinamica</h5>
+                            <p class="mb-0">L'analisi dinamica permette di osservare il comportamento effettivo del malware durante l'esecuzione in un ambiente controllato. Questa fase rivela comportamenti che potrebbero non essere evidenti dall'analisi statica, come tecniche di evasione, comunicazioni cifrate o payload in più stadi.</p>
+                        </div>
+                        
+                        <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-laptop me-2"></i>1. Preparazione dell'Ambiente</h5>
+                        <div class="mb-4">
+                            <div class="row">
+                                <div class="col-lg-8">
+                                    <h6 class="fw-bold mb-3"><i class="fas fa-server me-2"></i>Setup della macchina virtuale</h6>
+                                    <ul>
+                                        <li><strong>Software di virtualizzazione:</strong> VMware Workstation/Fusion, VirtualBox, Hyper-V</li>
+                                        <li><strong>Sistema operativo:</strong> Scegliere la versione appropriata basata sul target del malware</li>
+                                        <li><strong>Configurazione hardware:</strong> Allocare risorse sufficienti (RAM, CPU, spazio disco)</li>
+                                        <li><strong>Rete:</strong> Configurare in modalità Host-Only o utilizzare una rete isolata</li>
+                                        <li><strong>Snapshot:</strong> Creare uno stato pulito da poter ripristinare dopo ogni analisi</li>
+                                    </ul>
+                                    
+                                    <h6 class="fw-bold mb-3 mt-4"><i class="fas fa-tools me-2"></i>Strumenti di monitoraggio essenziali</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="card h-100 border-0 bg-light mb-3">
+                                                <div class="card-body">
+                                                    <h6 class="card-title fw-bold">Monitoraggio processi e sistema</h6>
+                                                    <ul class="mb-0">
+                                                        <li><strong>Process Explorer:</strong> Visualizzazione gerarchica dei processi</li>
+                                                        <li><strong>Process Monitor:</strong> Attività di file system, registro e processi</li>
+                                                        <li><strong>Autoruns:</strong> Punti di persistenza e avvio automatico</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="card h-100 border-0 bg-light mb-3">
+                                                <div class="card-body">
+                                                    <h6 class="card-title fw-bold">Monitoraggio di rete</h6>
+                                                    <ul class="mb-0">
+                                                        <li><strong>Wireshark:</strong> Analisi approfondita dei pacchetti di rete</li>
+                                                        <li><strong>INetSim:</strong> Simulazione di servizi di rete</li>
+                                                        <li><strong>FakeDNS:</strong> Reindirizzamento DNS per contenere le comunicazioni</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="card bg-dark text-white mb-4">
+                                        <div class="card-header bg-dark">
+                                            <h6 class="mb-0 fw-bold"><i class="fas fa-shield-alt me-2"></i>Misure di sicurezza</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="mb-0">
+                                                <li class="mb-2">Non condividere cartelle tra guest e host</li>
+                                                <li class="mb-2">Disabilitare funzionalità di clipboard condivisa</li>
+                                                <li class="mb-2">Utilizzare firewall per controllare tutto il traffico</li>
+                                                <li class="mb-2">Eseguire periodicamente pulizia completa della VM</li>
+                                                <li>Considerare l'uso di multiple VM in rete simulata per malware avanzati</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-play-circle me-2"></i>2. Esecuzione Controllata</h5>
+                        <div class="mb-4">
+                            <div class="row">
+                                <div class="col-md-7">
+                                    <h6 class="fw-bold mb-3"><i class="fas fa-list-ol me-2"></i>Procedura di esecuzione</h6>
+                                    <ol>
+                                        <li><strong>Avviare tutti gli strumenti di monitoraggio</strong> prima dell'esecuzione del malware</li>
+                                        <li><strong>Creare baseline del sistema</strong> con RegShot (primo snapshot)</li>
+                                        <li><strong>Esecuzione del malware</strong> con privilegi appropriati</li>
+                                        <li><strong>Osservazione del comportamento visibile</strong> (finestre, dialoghi, cambiamenti)</li>
+                                        <li><strong>Periodo di osservazione</strong> (alcuni malware ritardano l'attivazione)</li>
+                                        <li><strong>Secondo snapshot</strong> con RegShot per confrontare le modifiche</li>
+                                        <li><strong>Salvataggio di tutti i log</strong> per analisi approfondita</li>
+                                    </ol>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="alert alert-warning bg-warning bg-opacity-10 mb-3">
+                                        <h6 class="alert-heading fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Tecniche Anti-Analisi</h6>
+                                        <p class="small">Il malware moderno utilizza varie tecniche per evitare l'analisi:</p>
+                                        <ul class="small mb-0">
+                                            <li><strong>Sleep timers:</strong> Attese prolungate prima dell'attivazione</li>
+                                            <li><strong>Rilevamento VM:</strong> Controllo di artefatti di virtualizzazione</li>
+                                            <li><strong>Anti-debug:</strong> Rilevamento di debugger e strumenti di analisi</li>
+                                            <li><strong>Rilevamento ambiente:</strong> Controllo di utenti reali, interazioni mouse, ecc.</li>
+                                            <li><strong>Controllo data/ora:</strong> Verifica di periodi specifici per l'esecuzione</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="card border-0 bg-success bg-opacity-10 mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-title fw-bold"><i class="fas fa-lightbulb me-2"></i>Consiglio</h6>
+                                            <p class="card-text small mb-0">Prova diverse esecuzioni alterando l'ambiente (data di sistema, rete attiva/inattiva, simulando interazioni utente) per attivare tutti i comportamenti potenziali del malware.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-search-plus me-2"></i>3. Analisi dei Comportamenti</h5>
+                        <div class="mb-4">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <h6 class="fw-bold mb-3">Operazioni sul file system</h6>
+                                    <div class="card border-0 bg-light mb-3">
+                                        <div class="card-body py-2">
+                                            <ul class="mb-0 small">
+                                                <li><strong>Creazione di file:</strong> Eseguibili, DLL, script in percorsi sensibili</li>
+                                                <li><strong>Modifiche a file di sistema:</strong> Hosts, driver, configurazioni</li>
+                                                <li><strong>File temporanei:</strong> Componenti scaricati o estratti</li>
+                                                <li><strong>File con attributi speciali:</strong> Nascosti, di sistema, cifrati</li>
+                                                <li><strong>Directory comuni:</strong> %TEMP%, %APPDATA%, %SYSTEM32%</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <h6 class="fw-bold mb-3">Modifiche al registro di sistema</h6>
+                                    <div class="card border-0 bg-light mb-3">
+                                        <div class="card-body py-2">
+                                            <ul class="mb-0 small">
+                                                <li><strong>Chiavi di persistenza:</strong> Run, RunOnce, Services, WinLogon</li>
+                                                <li><strong>Configurazioni di sistema:</strong> Impostazioni di sicurezza</li>
+                                                <li><strong>Disabilitazione funzioni:</strong> UAC, Windows Defender, Firewall</li>
+                                                <li><strong>Hijacking di estensioni:</strong> Associazioni di file modificate</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <h6 class="fw-bold mb-3">Attività di rete</h6>
+                                    <div class="card border-0 bg-light mb-3">
+                                        <div class="card-body py-2">
+                                            <ul class="mb-0 small">
+                                                <li><strong>Connessioni in uscita:</strong> IP, domini, porte utilizzate</li>
+                                                <li><strong>Protocolli:</strong> HTTP, HTTPS, DNS, custom protocols</li>
+                                                <li><strong>C2 traffic:</strong> Comandi e controllo, beaconing</li>
+                                                <li><strong>Esfiltrazione di dati:</strong> Trasferimento di informazioni sensibili</li>
+                                                <li><strong>Tecniche di evasione:</strong> DNS tunneling, DGA, steganografia</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <h6 class="fw-bold mb-3">Comportamento dei processi</h6>
+                                    <div class="card border-0 bg-light mb-3">
+                                        <div class="card-body py-2">
+                                            <ul class="mb-0 small">
+                                                <li><strong>Creazione di processi:</strong> Processi figli, servizi</li>
+                                                <li><strong>Iniezione di codice:</strong> In processi legittimi del sistema</li>
+                                                <li><strong>Escalation privilegi:</strong> Tentativi di ottenere accessi elevati</li>
+                                                <li><strong>Terminazione processi:</strong> Processi di sicurezza, antivirus</li>
+                                                <li><strong>Accesso a memoria:</strong> Tecniche di heap spray, ROP</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-chart-pie me-2"></i>4. Documentazione e Reporting</h5>
+                        <div class="mb-4">
+                            <p>Una documentazione completa dell'analisi dinamica dovrebbe includere:</p>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-title fw-bold">Raccolta artefatti</h6>
+                                            <ul class="mb-0">
+                                                <li>Screenshot dell'esecuzione del malware</li>
+                                                <li>Log completi di Process Monitor</li>
+                                                <li>Capture di rete (PCAP)</li>
+                                                <li>Report di RegShot (differenze)</li>
+                                                <li>Memory dumps per analisi forense</li>
+                                                <li>File creati o modificati dal malware</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-title fw-bold">Struttura del report</h6>
+                                            <ul class="mb-0">
+                                                <li>Riepilogo delle attività osservate</li>
+                                                <li>Indicatori di compromissione (IoC)</li>
+                                                <li>Persistenza e tecniche di evasione</li>
+                                                <li>Funzionalità malware (ransomware, trojan, etc.)</li>
+                                                <li>Potenziale famiglia di malware</li>
+                                                <li>Raccomandazioni di contenimento e remediation</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-success bg-success bg-opacity-10">
+                            <h5 class="alert-heading fw-bold"><i class="fas fa-check-circle me-2"></i>Checklist Completa di Analisi Dinamica</h5>
+                            <ol class="mb-0">
+                                <li>Preparare ambiente isolato con strumenti di monitoraggio</li>
+                                <li>Creare snapshot pre-esecuzione</li>
+                                <li>Avviare tutti gli strumenti di monitoraggio</li>
+                                <li>Eseguire il malware e osservare comportamento immediato</li>
+                                <li>Monitorare attività di file system, registro, processi e rete</li>
+                                <li>Documentare tutti i comportamenti osservati</li>
+                                <li>Identificare meccanismi di persistenza e C2</li>
+                                <li>Raccogliere indicatori di compromissione (IoC)</li>
+                                <li>Eseguire dump della memoria per analisi avanzata</li>
+                                <li>Analizzare comportamenti anti-analisi e di evasione</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h4 class="mb-0"><i class="fas fa-tools me-2"></i>Sezione in sviluppo</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">Stiamo lavorando per ampliare questa sezione con tecniche di analisi dinamica avanzata, tra cui:</p>
+                        <ul class="mb-0">
+                            <li>Analisi delle API utilizzate durante l'esecuzione</li>
+                            <li>Tecniche di memory forensics</li>
+                            <li>Hooking e patching di API per eludere meccanismi anti-analisi</li>
+                            <li>Configurazione di ambienti "realistici" per ingannare meccanismi anti-VM</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch("sidebar.html")
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("sidebar-placeholder").innerHTML = data;
+                    setupSidebar(); // Funzione presente in main.js
+                });
+                
+            // Inizializza highlight.js
+            if (typeof hljs !== 'undefined') {
+                hljs.highlightAll();
+            } else {
+                console.warn('Highlight.js non è stato caricato correttamente');
+            }
+            
+            // Aggiungi funzionalità per lo zoom delle immagini
+            document.querySelectorAll('.image-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Permette il comportamento predefinito di aprire l'immagine in una nuova finestra
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+ 1️⃣ Calcolo dell'hash del file
+Windows (CMD):
+
+bash
+Copy
+Edit
+certutil -hashfile file.exe SHA256
+Linux:
+
+bash
+Copy
+Edit
+sha256sum file.exe
+🌐 2️⃣ Caricamento su VirusTotal
+Verifica i seguenti campi:
+
+Details:
+
+File Type: Eseguibile, script, documento, ecc.
+
+File Size: Payload complesso o dropper semplice.
+
+Compilation Date: Coerenza con la versione del software.
+
+Packer/Protector: Offuscamento o packer noti (UPX, Themida, ecc.).
+
+Import Table: Librerie utilizzate (es. kernel32.dll, advapi32.dll).
+
+Sections: Nomi sospetti o dimensioni anomale (.text, .data, .rdata).
+
+Digital Signature: Verifica di autenticità e attendibilità.
+
+Behavior:
+
+Registry Modifications: Chiavi di sistema, persistenza, disabilitazione di Windows Defender.
+
+Network Communication: HTTP/HTTPS, richieste DNS, IP sospetti.
+
+Processes Created/Tree: Esecuzione di PowerShell, CMD o altri processi.
+
+Mutexes Created: Verifica tentativi di evitare duplicazioni.
+
+Relations:
+
+Execution Files: Download da siti malevoli o bundle sospetti.
+
+Dropped Files: Controlla file rilasciati dal malware.
+
+Contacted IP/Domain: Identifica connessioni verso C2 server.
+
+Community:
+
+Community Analysis: Commenti, intuizioni, indicatori condivisi.
+
+Tags: Verifica di tag specifici come "Ransomware", "Trojan", "Keylogger".
+
+Reports and Links: Collegamenti a Hybrid Analysis, Any.Run o report esterni.
+
+🔎 3️⃣ Estrazione delle stringhe con strings e floss
+Strings:
+
+bash
+Copy
+Edit
+strings file.exe
+Floss (più avanzato, trova stringhe offuscate):
+
+bash
+Copy
+Edit
+floss file.exe
+🔎 4️⃣ Analisi Import Address Table (IAT) con PEView
+Le Section rappresentano diverse aree di memoria del programma:
+
+.text: Codice eseguibile.
+
+.data: Dati globali e variabili statiche.
+
+.rdata: Dati di sola lettura (stringhe, Import Table).
+
+.bss: Variabili globali non inizializzate.
+
+.idata: Import Table con librerie e funzioni.
+
+.rsrc: Risorse del programma (icone, immagini, stringhe localizzate).
+
+Virtual Size > Size of Raw Data → Potenziale packed o comportamento anomalo.
+
+🗃 5️⃣ Windows API comuni nei malware
+CreateFile → Creazione o apertura di file
+
+WriteFile → Scrittura su file
+
+VirtualAlloc → Allocazione dinamica di memoria (es. shellcode)
+
+CreateProcess → Avvio di nuovi processi
+
+Connect → Connessioni di rete (C2)
+
+🔐 6️⃣ Identificazione di Packed Malware
+Indicatori di packed:
+
+Virtual Size molto più grande del Size of Raw Data.
+
+Importazioni limitate o assenti.
+
+Sezioni con nomi sospetti (.upx, .packed, .crypt).
+
+Tool per identificare packing:
+
+PEiD
+
+Detect It Easy (DIE)
+
+Exeinfo PE
+
+PE-bear
+
+🖥 7️⃣ Strumenti per Analisi Statica Avanzata
+pestudio: Evidenzia packing, funzioni API pericolose e indicatori di malware.
+
+CAPA: Identificazione rapida di capacità e comportamenti malevoli.

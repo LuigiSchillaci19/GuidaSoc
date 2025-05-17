@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisi Statica - GuidaSOC</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-content">
+        <div id="sidebar-placeholder"></div>
+        
+        <div class="content">
+            <div class="container">
+                <h1 class="mb-4">Analisi Statica del Malware</h1>
+                <p class="lead">L'analisi statica consiste nell'esaminare un file sospetto senza eseguirlo, utilizzando vari strumenti per raccogliere informazioni sul suo comportamento potenziale.</p>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Raccolta Informazioni (Metadata Analysis)</h4>
+                    </div>
+                    <div class="card-body">
+                        <ol>
+                            <li>
+                                <strong>Identificazione del tipo di file</strong>:
+                                <ul>
+                                    <li>Esegui il comando <code>file &lt;documento&gt;</code> per verificare l'effettiva estensione e integrità del file.</li>
+                                    <li>Usa <code>exiftool &lt;documento&gt;</code> per analizzare i metadati (autore, timestamp, software di creazione).</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Hashing e identificazione</strong>:
+                                <ul>
+                                    <li>Calcola l'hash del file con <code>sha256sum &lt;documento&gt;</code> per identificazioni successive.</li>
+                                    <li>Verifica su <strong>VirusTotal</strong>, <strong>Malshare</strong> o <strong>Hybrid Analysis</strong> per indicatori noti.</li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Passi dell'Analisi Statica</h4>
+                    </div>
+                    <div class="card-body">
+                        <ol>
+                            <li>
+                                <strong>Calcolare l'hash del file</strong>
+                                <pre><code class="language-bash">Certutil -hashfile file.exe SHA256   # Per CMD Windows
+sha256sum file.exe                 # Per Linux</code></pre>
+                            </li>
+                            
+                            <li>
+                                <strong>Caricare l'hash su VirusTotal</strong>
+                                <p>Campi importanti da analizzare:</p>
+                                <ul>
+                                    <li><strong>File Type:</strong> Identifica se è un eseguibile, script, documento, ecc.</li>
+                                    <li><strong>File Size:</strong> Indica se è un payload complesso o un semplice dropper.</li>
+                                    <li><strong>Compilation Date:</strong> Verifica se è coerente con la versione del software.</li>
+                                    <li><strong>Packer/Protector:</strong> Controlla se è offuscato o protetto da un packer.</li>
+                                    <li><strong>Import Table:</strong> Verifica le librerie utilizzate.</li>
+                                    <li><strong>Sections:</strong> Osserva nomi sospetti o dimensioni anomale.</li>
+                                    <li><strong>Digital Signature:</strong> Se presente, verifica l'attendibilità.</li>
+                                </ul>
+                            </li>
+                            
+                            <li>
+                                <strong>Analisi delle stringhe</strong>
+                                <pre><code class="language-bash">strings file.exe
+floss file.exe   # FLOSS rileva anche stringhe offuscate</code></pre>
+                                <p>FLOSS è un'evoluzione di strings, oltre alle stringhe in chiaro, <strong>rileva e decodifica stringhe offuscate o criptate</strong> che normalmente non sarebbero visibili con strings.</p>
+                                
+                                <div class="text-center my-4">
+                                    <img src="attached_assets/Pasted image 20250517124433.png" alt="Esempio di output del comando FLOSS" class="img-fluid border rounded shadow-sm" style="max-width: 90%;">
+                                    <p class="text-muted mt-2"><small>Esempio di output del comando FLOSS che mostra stringhe estratte da un malware</small></p>
+                                </div>
+                            </li>
+                            
+                            <li>
+                                <strong>Analizzare la tabella di import address con PEView</strong>
+                                <p>Le <strong>Section</strong> rappresentano diverse aree di memoria utilizzate dal programma:</p>
+                                <ul>
+                                    <li><strong>.text</strong> - Contiene il codice eseguibile (le istruzioni del programma)</li>
+                                    <li><strong>.data</strong> - Area di memoria che contiene dati globali e variabili statiche</li>
+                                    <li><strong>.rdata</strong> - Contiene dati di sola lettura, come le stringhe costanti e le Import Table</li>
+                                    <li><strong>.bss</strong> - Sezione non inizializzata, usata per variabili globali non inizializzate</li>
+                                    <li><strong>.idata</strong> - Contiene la Import Table, con le librerie e le funzioni importate</li>
+                                    <li><strong>.rsrc</strong> - Contiene le risorse del programma, come icone, immagini, menu</li>
+                                </ul>
+                                
+                                <div class="text-center my-4">
+                                    <img src="attached_assets/Pasted image 20250517124546.png" alt="PEView - Sezioni di un file PE" class="img-fluid border rounded shadow-sm" style="max-width: 90%;">
+                                    <p class="text-muted mt-2"><small>PEView mostrando le sezioni di un file PE (Portable Executable)</small></p>
+                                </div>
+                                
+                                <div class="text-center my-4">
+                                    <img src="attached_assets/Pasted image 20250517124609.png" alt="PEView - Import Table" class="img-fluid border rounded shadow-sm" style="max-width: 90%;">
+                                    <p class="text-muted mt-2"><small>PEView mostrando la Import Table con funzioni sospette</small></p>
+                                </div>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Come capire se un malware è packed?</h4>
+                    </div>
+                    <div class="card-body">
+                        <p>Il packing nasconde il codice reale del malware rendendo difficile l'analisi con strumenti automatici. Il file appare "incomprensibile" finché non viene eseguito e decompresso in memoria.</p>
+                        
+                        <h5>Indicatori di packing:</h5>
+                        <ul>
+                            <li>Se il <strong>Virtual Size</strong> (la dimensione in memoria) è molto più grande del <strong>Size of Raw Data</strong> (la dimensione sul disco)</li>
+                            <li>Poche o nessuna funzione importata visibile</li>
+                            <li>Sezioni con nomi come <code>.upx</code>, <code>.packed</code>, <code>.crypt</code>, o nomi non standard</li>
+                        </ul>
+                        
+                        <p>Software come <strong>PEiD</strong>, <strong>Detect It Easy (DIE)</strong>, <strong>Exeinfo PE</strong> o <strong>PE-bear</strong> identificano automaticamente se un file è packed e quale packer viene utilizzato.</p>
+                        
+                        <div class="text-center my-4">
+                            <img src="attached_assets/Pasted image 20250517124908.png" alt="Detect It Easy mostrando un malware packed" class="img-fluid border rounded shadow-sm" style="max-width: 90%;">
+                            <p class="text-muted mt-2"><small>Detect It Easy (DIE) che rileva un malware packed con UPX</small></p>
+                        </div>
+                        
+                        <div class="text-center my-4">
+                            <img src="attached_assets/Pasted image 20250517124939.png" alt="Hexdump di un file packed" class="img-fluid border rounded shadow-sm" style="max-width: 90%;">
+                            <p class="text-muted mt-2"><small>Visione del contenuto esadecimale di un file packed - si noti la compressione evidente</small></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4 border-primary">
+                    <div class="card-header bg-primary bg-opacity-10 text-primary">
+                        <h4 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Playbook Completo di Analisi Statica</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info bg-info bg-opacity-10 mb-4">
+                            <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Obiettivo dell'analisi statica</h5>
+                            <p class="mb-0">L'analisi statica permette di esaminare il malware senza eseguirlo, riducendo i rischi di infezione. Questa fase è fondamentale per comprendere la struttura, le funzionalità e i potenziali comportamenti malevoli di un file sospetto prima di procedere con l'analisi dinamica.</p>
+                        </div>
+                        
+                        <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-fingerprint me-2"></i>1. Identificazione e Classificazione</h5>
+                        <div class="mb-4">
+                            <h6 class="fw-bold"><i class="fas fa-hashtag me-2"></i>Calcolo dell'hash del file</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-dark mb-3">
+                                        <div class="card-header bg-dark text-white">
+                                            <small>Windows (CMD/PowerShell)</small>
+                                        </div>
+                                        <div class="card-body">
+                                            <pre class="mb-0"><code class="language-bash">certutil -hashfile file.exe SHA256</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-dark mb-3">
+                                        <div class="card-header bg-dark text-white">
+                                            <small>Linux/Mac</small>
+                                        </div>
+                                        <div class="card-body">
+                                            <pre class="mb-0"><code class="language-bash">sha256sum file.exe</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p>L'hash SHA-256 è un'impronta digitale univoca del file che permette di identificarlo in modo sicuro e verificare se è già conosciuto come malevolo nei database di intelligence.</p>
+                        </div>
+                        
+                        <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-globe-americas me-2"></i>2. Analisi di Reputazione e Intelligence</h5>
+                        <div class="mb-4">
+                            <h6 class="fw-bold"><i class="fas fa-virus-slash me-2"></i>Ricerca su VirusTotal e altri servizi di intelligence</h6>
+                            <p>Carica l'hash su <a href="https://www.virustotal.com/" target="_blank" class="text-decoration-none">VirusTotal</a>, <a href="https://www.hybrid-analysis.com/" target="_blank" class="text-decoration-none">Hybrid Analysis</a> o <a href="https://any.run/" target="_blank" class="text-decoration-none">ANY.RUN</a> e analizza i seguenti elementi:</p>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-light mb-3">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0 fw-bold">🗂 Dettagli Tecnici</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="mb-0">
+                                                <li><strong>File Type:</strong> Identifica il tipo di file (eseguibile, script, documento)</li>
+                                                <li><strong>File Size:</strong> Dimensione che può indicare payload complesso o dropper</li>
+                                                <li><strong>Compilation Date:</strong> Data che deve essere coerente con versione dichiarata</li>
+                                                <li><strong>Packer/Protector:</strong> Verifica se il file è offuscato (UPX, Themida, ecc.)</li>
+                                                <li><strong>Import Table:</strong> Librerie usate (kernel32.dll, advapi32.dll, ecc.)</li>
+                                                <li><strong>Sections:</strong> Nomi e dimensioni sospette (.text, .data, .rdata)</li>
+                                                <li><strong>Digital Signature:</strong> Presenza, validità e attendibilità</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-light mb-3">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0 fw-bold">🔎 Comportamento Rilevato</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="mb-0">
+                                                <li><strong>Registry Modifications:</strong> Controllo di chiavi di persistenza</li>
+                                                <li><strong>Network Communication:</strong> Chiamate HTTP/HTTPS e DNS sospette</li>
+                                                <li><strong>Processes Created:</strong> Esecuzione di PowerShell, CMD</li>
+                                                <li><strong>Mutexes Created:</strong> Tentativi di evitare duplicazioni</li>
+                                                <li><strong>Relations:</strong> File scaricati, file rilasciati, domini contattati</li>
+                                                <li><strong>Community Analysis:</strong> Commenti e tag della community</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-search me-2"></i>3. Estrazione e Analisi delle Stringhe</h5>
+                        <div class="mb-4">
+                            <div class="card bg-dark mb-3">
+                                <div class="card-header bg-dark text-white">
+                                    <small>Comandi di Estrazione</small>
+                                </div>
+                                <div class="card-body">
+                                    <pre class="mb-0"><code class="language-bash"># Estrazione base di stringhe
+strings file.exe
+
+# Estrazione avanzata (stringhe offuscate/criptate)
+floss file.exe</code></pre>
+                                </div>
+                            </div>
+                            
+                            <p>FLOSS (FireEye Labs Obfuscated String Solver) è un'evoluzione di strings che, oltre alle stringhe in chiaro, <strong>rileva e decodifica stringhe offuscate o criptate</strong> che normalmente non sarebbero visibili.</p>
+                            
+                            <div class="alert alert-warning bg-warning bg-opacity-10">
+                                <h6 class="alert-heading fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Elementi sospetti da cercare nelle stringhe</h6>
+                                <ul class="mb-0">
+                                    <li>URL e indirizzi IP (possibili server C2)</li>
+                                    <li>Comandi del sistema operativo (cmd.exe, powershell.exe)</li>
+                                    <li>Percorsi di file e directory del sistema</li>
+                                    <li>Chiavi di registro o riferimenti alla persistenza</li>
+                                    <li>Stringhe offuscate o codificate (base64, hex)</li>
+                                    <li>Nomi di API di sistema potenzialmente pericolose</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-file-code me-2"></i>4. Analisi della Struttura PE (Portable Executable)</h5>
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-3">Analisi delle sezioni e della Import Table con PEView</h6>
+                            
+                            <div class="row">
+                                <div class="col-lg-7">
+                                    <p>Le sezioni in un file PE rappresentano diverse aree di memoria con funzioni specifiche:</p>
+                                    <ul>
+                                        <li><strong>.text</strong> - Contiene il codice eseguibile del programma</li>
+                                        <li><strong>.data</strong> - Area per i dati globali e le variabili statiche</li>
+                                        <li><strong>.rdata</strong> - Dati di sola lettura (costanti, stringhe)</li>
+                                        <li><strong>.bss</strong> - Sezione non inizializzata per variabili globali</li>
+                                        <li><strong>.idata</strong> - Import Table con librerie e funzioni usate</li>
+                                        <li><strong>.rsrc</strong> - Risorse del programma (icone, menu, stringhe)</li>
+                                    </ul>
+                                    
+                                    <div class="alert alert-danger bg-danger bg-opacity-10">
+                                        <h6 class="alert-heading fw-bold"><i class="fas fa-exclamation-circle me-2"></i>Indicatori di file packed o offuscato</h6>
+                                        <ul class="mb-0">
+                                            <li><strong>Virtual Size molto maggiore di Size of Raw Data</strong> - Indica compressione o offuscamento</li>
+                                            <li><strong>Poche importazioni visibili</strong> - Il malware nasconde le API che utilizza</li>
+                                            <li><strong>Sezioni con nomi anomali</strong> - (.upx, .packed, .crypt, ecc.)</li>
+                                            <li><strong>Entropia elevata</strong> - Indica dati compressi o criptati</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-lg-5">
+                                    <div class="text-center mb-3">
+                                        <a href="attached_assets/Pasted image 20250517124517.png" target="_blank" class="image-link">
+                                            <img src="attached_assets/Pasted image 20250517124517.png" alt="PEView - Sezione header" class="img-fluid border rounded shadow-sm">
+                                            <div class="overlay"><i class="fas fa-search-plus"></i></div>
+                                        </a>
+                                        <p class="text-muted mt-2"><small>Header della sezione .text che mostra Virtual Size > Size of Raw Data (possibile packing)</small></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h6 class="fw-bold mt-4 mb-3"><i class="fas fa-table me-2"></i>API importate da monitorare</h6>
+                            <p>Le Windows API più comunemente utilizzate dai malware includono:</p>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light mb-3">
+                                        <div class="card-body py-2">
+                                            <ul class="mb-0">
+                                                <li><code class="bg-dark text-white px-1">CreateFile/WriteFile</code> - Operazioni su file</li>
+                                                <li><code class="bg-dark text-white px-1">VirtualAlloc/VirtualProtect</code> - Allocazione memoria</li>
+                                                <li><code class="bg-dark text-white px-1">CreateProcess</code> - Esecuzione di processi</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light mb-3">
+                                        <div class="card-body py-2">
+                                            <ul class="mb-0">
+                                                <li><code class="bg-dark text-white px-1">RegCreateKeyEx</code> - Operazioni su registro</li>
+                                                <li><code class="bg-dark text-white px-1">InternetOpen/InternetOpenUrl</code> - Comunicazioni di rete</li>
+                                                <li><code class="bg-dark text-white px-1">FindFirstFile/FindNextFile</code> - Ricerca file</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <p>Una risorsa utile è <a href="https://malapi.io/" target="_blank" class="text-decoration-none">MalAPI.io</a>, che aiuta a comprendere come determinate API di Windows vengono utilizzate per attività malevole.</p>
+                        </div>
+                        
+                        <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-shield-alt me-2"></i>5. Individuazione di Packing e Offuscamento</h5>
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-3">Identificare file packed con strumenti specializzati</h6>
+                            <p>I malware spesso utilizzano tecniche di packing per nascondere il codice malevolo e ostacolare l'analisi statica. Puoi identificarli con questi strumenti:</p>
+                            
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="card h-100 text-center border-0 bg-light">
+                                        <div class="card-body">
+                                            <i class="fas fa-box-open fa-2x mb-3 text-primary"></i>
+                                            <h6 class="card-title">PEiD</h6>
+                                            <p class="card-text small">Identifica packer comuni</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card h-100 text-center border-0 bg-light">
+                                        <div class="card-body">
+                                            <i class="fas fa-eye fa-2x mb-3 text-primary"></i>
+                                            <h6 class="card-title">Detect It Easy</h6>
+                                            <p class="card-text small">Rilevamento avanzato di packer</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card h-100 text-center border-0 bg-light">
+                                        <div class="card-body">
+                                            <i class="fas fa-file-code fa-2x mb-3 text-primary"></i>
+                                            <h6 class="card-title">Exeinfo PE</h6>
+                                            <p class="card-text small">Informazioni su file e packer</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card h-100 text-center border-0 bg-light">
+                                        <div class="card-body">
+                                            <i class="fas fa-microscope fa-2x mb-3 text-primary"></i>
+                                            <h6 class="card-title">PE-bear</h6>
+                                            <p class="card-text small">Analisi dettagliata di PE</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-robot me-2"></i>6. Analisi Statica Automatizzata</h5>
+                        <div class="mb-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 bg-light mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-title fw-bold"><i class="fas fa-project-diagram me-2"></i>pestudio</h6>
+                                            <p class="card-text">Tool che automatizza l'analisi statica identificando:</p>
+                                            <ul class="mb-0">
+                                                <li>File packed o protetti</li>
+                                                <li>API potenzialmente pericolose</li>
+                                                <li>Indicatori di comportamento malevolo</li>
+                                                <li>Anomalie nella struttura del file</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 bg-light mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-title fw-bold"><i class="fas fa-brain me-2"></i>CAPA</h6>
+                                            <p class="card-text">Strumento avanzato che identifica automaticamente:</p>
+                                            <ul class="mb-0">
+                                                <li>Capacità del malware (keylogging, evasione)</li>
+                                                <li>Tecniche di offuscamento</li>
+                                                <li>Pattern di comportamento malevolo</li>
+                                                <li>Funzionalità per C2 e persistenza</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-success bg-success bg-opacity-10">
+                            <h5 class="alert-heading fw-bold"><i class="fas fa-check-circle me-2"></i>Checklist Completa di Analisi Statica</h5>
+                            <ol class="mb-0">
+                                <li>Calcolare hash del file (SHA256/MD5)</li>
+                                <li>Cercare hash su VirusTotal e consultare intelligence</li>
+                                <li>Verificare relazioni: file parent, dropped files, domini</li>
+                                <li>Estrarre stringhe con <code class="bg-dark text-white px-1">strings</code> e <code class="bg-dark text-white px-1">floss</code></li>
+                                <li>Verificare presenza e validità di firme digitali</li>
+                                <li>Controllare telemetrie dispositivo (eventi, log, EDR)</li>
+                                <li>Analizzare struttura PE (sezioni, import table) con PEview</li>
+                                <li>Controllare funzioni API potenzialmente pericolose</li>
+                                <li>Individuare segni di packing/offuscamento</li>
+                                <li>Documentare e creare report completo</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h4 class="mb-0"><i class="fas fa-tools me-2"></i>Sezione in sviluppo</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">Stiamo lavorando per ampliare questa sezione con ulteriori tecniche di analisi statica avanzata, tra cui:</p>
+                        <ul class="mb-0">
+                            <li>Disassembling di file eseguibili</li>
+                            <li>Analisi di codice Assembly</li>
+                            <li>Ricostruzione del Control Flow Graph</li>
+                            <li>Tecniche di deobfuscation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch("sidebar.html")
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("sidebar-placeholder").innerHTML = data;
+                    setupSidebar(); // Funzione presente in main.js
+                });
+                
+            // Inizializza highlight.js
+            if (typeof hljs !== 'undefined') {
+                hljs.highlightAll();
+            } else {
+                console.warn('Highlight.js non è stato caricato correttamente');
+            }
+            
+            // Aggiungi funzionalità per lo zoom delle immagini
+            document.querySelectorAll('.image-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Permette il comportamento predefinito di aprire l'immagine in una nuova finestra
+                });
+            });
+        });
+    </script>
+</body>
+</html>
